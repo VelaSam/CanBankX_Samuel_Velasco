@@ -1,0 +1,57 @@
+@startuml
+!define RECTANGLE rectangle
+
+node "Client Device" {
+  [Web/Mobile App]
+}
+
+node "Docker Host (Production / Test)" as Docker {
+  
+  node "Ingress & Routing" {
+    [NGINX Load Balancer] as Nginx
+    [Kong API Gateway] as Kong
+  }
+
+  node "Microservices (Go)" {
+    [Identity Service] as IS
+    [Core Banking Service] as CBS
+    [Payment Service] as PS
+    [Compliance Service] as CS
+  }
+
+  node "Databases (MySQL)" {
+    database "Identity DB" as IDB
+    database "Core Banking DB" as CDB
+    database "Payment DB" as PDB
+    database "Compliance DB" as CmpDB
+  }
+
+  node "Observability & Caching" {
+    [Prometheus] as Prom
+    [Grafana] as Graf
+    database "Redis (Cache)" as Redis
+  }
+}
+
+[Web/Mobile App] --> Nginx : HTTPS (REST)
+Nginx --> Kong : Route/LB
+Kong --> IS : /api/v1/auth
+Kong --> CBS : /api/v1/accounts
+Kong --> PS : /api/v1/payments
+Kong --> CS : /api/v1/compliance
+
+IS --> IDB : Read/Write
+CBS --> CDB : Read/Write (Ledger)
+PS --> PDB : Read/Write
+CS --> CmpDB : Read/Write
+
+PS --> CBS : gRPC/REST (Check Funds)
+CBS --> Redis : Cache balances
+
+Prom --> IS : /metrics
+Prom --> CBS : /metrics
+Prom --> PS : /metrics
+Prom --> CS : /metrics
+Graf --> Prom : Query metrics
+
+@enduml
