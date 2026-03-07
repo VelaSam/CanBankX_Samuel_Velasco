@@ -11,7 +11,9 @@ import (
 	"gorm.io/gorm"
 
 	accounts "canbankx/internal/accounts/domain"
+	identityAdapters "canbankx/internal/identity/adapters"
 	identity "canbankx/internal/identity/domain"
+	identityService "canbankx/internal/identity/service"
 	ledger "canbankx/internal/ledger/domain"
 	transfers "canbankx/internal/transfers/domain"
 )
@@ -68,6 +70,15 @@ func main() {
 			"status": status,
 		})
 	})
+
+	api := r.Group("/api/v1")
+
+	identityRepo := identityAdapters.NewUserRepository(DB)
+	identitySvc := identityService.NewIdentityService(identityRepo)
+	identityHandler := identityAdapters.NewIdentityHandler(identitySvc)
+
+	identityRoutes := api.Group("/identity")
+	identityHandler.RegisterRoutes(identityRoutes)
 
 	port := os.Getenv("PORT")
 	if port == "" {
