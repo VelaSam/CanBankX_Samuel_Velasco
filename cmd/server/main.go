@@ -74,7 +74,8 @@ func main() {
 	api := r.Group("/api/v1")
 
 	identityRepo := identityAdapters.NewUserRepository(DB)
-	identitySvc := identityService.NewIdentityService(identityRepo)
+	sessionRepo := identityAdapters.NewSessionRepository(DB)
+	identitySvc := identityService.NewIdentityService(identityRepo, sessionRepo)
 	identityHandler := identityAdapters.NewIdentityHandler(identitySvc)
 
 	identityRoutes := api.Group("/identity")

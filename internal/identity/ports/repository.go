@@ -8,3 +8,9 @@ type UserRepository interface {
 	FindByID(id uint) (*domain.User, error)
 	Update(user *domain.User) error
 }
+
+type SessionRepository interface {
+	Save(session *domain.Session) error
+	FindByToken(token string) (*domain.Session, error)
+	DeleteByToken(token string) error
+}
