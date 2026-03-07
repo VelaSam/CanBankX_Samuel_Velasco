@@ -6,6 +6,8 @@ import (
 	"gorm.io/gorm"
 )
 
+// au cas ou tu oublie, les struct dans ce fichier sont les entités du domaine et sont utilisées par les repositories pour stocker les données dans la bd
+
 type User struct {
 	ID           uint           `gorm:"primaryKey" json:"id"`
 	FirstName    string         `gorm:"size:100;not null" json:"firstName"`

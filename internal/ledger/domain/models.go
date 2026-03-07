@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+// cest vrm cool mais confusing au debut, mais gorn utilise un naming strategy pour les tables dans la bd, donc LedgerEntry va devenir ledger_entries dans la bd
+
 type Transaction struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
 	Reference string    `gorm:"size:255;not null;uniqueIndex" json:"reference"` //  Transfer ID or external ref

@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+// dans la bd Transfer sera transfers
+
 type Transfer struct {
 	ID             uint      `gorm:"primaryKey" json:"id"`
 	IdempotencyKey string    `gorm:"size:255;not null;uniqueIndex" json:"idempotencyKey"`

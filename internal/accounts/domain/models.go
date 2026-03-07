@@ -6,6 +6,8 @@ import (
 	"gorm.io/gorm"
 )
 
+// dans la bd Account sera accounts
+
 type Account struct {
 	ID        uint           `gorm:"primaryKey" json:"id"`
 	UserID    uint           `gorm:"not null;index" json:"userId"`
