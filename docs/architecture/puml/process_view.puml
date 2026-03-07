@@ -1,0 +1,48 @@
+@startuml ProcessViewDiagram
+autonumber
+
+actor Client
+participant "API Router" as Router
+participant "Middleware Auth" as Auth
+participant "Transfers Handler" as Handler
+participant "Transfers Bounded Context" as Transfers
+participant "Accounts Bounded Context" as Accounts
+participant "Ledger Bounded Context" as Ledger
+database "MySQL" as DB
+
+Client -> Router: POST /api/v1/transfers (Idempotency-Key)
+Router -> Auth: Validate JWT Token
+Auth --> Router: Token Valid
+Router -> Handler: Handle Request
+
+Handler -> Transfers: ProcessTransfer(req)
+activate Transfers
+
+Transfers -> DB: BEGIN Transaction
+activate DB
+
+Transfers -> Transfers: Check Idempotency-Key
+
+Transfers -> Accounts: Lock source & target accounts (FOR UPDATE)
+activate Accounts
+Accounts -> DB: SELECT ... FOR UPDATE
+Accounts --> Transfers: Accounts Locked
+deactivate Accounts
+
+Transfers -> Transfers: Verify Sufficient Funds
+
+Transfers -> Ledger: Record Transaction & Entries
+activate Ledger
+Ledger -> DB: INSERT INTO ledger_entries
+Ledger --> Transfers: Entries Recorded
+deactivate Ledger
+
+Transfers -> DB: COMMIT Transaction
+deactivate DB
+
+Transfers --> Handler: Success
+deactivate Transfers
+
+Handler --> Client: 201 Created
+
+@enduml

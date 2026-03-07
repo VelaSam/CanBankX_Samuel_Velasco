@@ -1,0 +1,20 @@
+@startuml
+skinparam componentStyle uml2
+
+actor "Clients\n(Web/Mobile)" as Client
+node "CanBankX Monolith\n(Go / REST API)" as Monolith
+database "MySQL\nDatabase" as DB
+
+Client --> Monolith : HTTPS / REST
+Monolith --> DB : TCP Connection
+
+node "Observability Stack" {
+  component "Prometheus" as Prom
+  component "Grafana" as Grafana
+  component "Structured Logs\n(e.g., stdout/file)" as Logs
+}
+
+Monolith -.-> Prom : Exposes Metrics (/metrics)
+Monolith -.-> Logs : Writes Logs
+Grafana --> Prom : Queries Metrics
+@enduml

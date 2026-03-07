@@ -1,0 +1,19 @@
+@startuml UseCaseDiagram
+left to right direction
+actor "Client" as client
+
+package "CanBankX - Plateforme Bancaire" {
+  usecase "UC-01: Inscription & KYC" as UC1
+  usecase "UC-02: Authentification & MFA" as UC2
+  usecase "UC-03: Ouverture de compte" as UC3
+  usecase "UC-04: Consultation soldes/historique" as UC4
+  usecase "UC-05: Virement bancaire" as UC5
+}
+
+client --> UC1
+client --> UC2
+client --> UC3
+client --> UC4
+client --> UC5
+
+@enduml

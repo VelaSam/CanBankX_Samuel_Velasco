@@ -1,0 +1,38 @@
+@startuml
+skinparam componentStyle uml2
+
+actor "Clients\n(Web/Mobile)" as Client
+node "Load Balancer\n(NGINX / HAProxy)" as LB
+
+node "CanBankX Instances (Go)" {
+  node "Instance 1" as Node1
+  node "Instance 2" as Node2
+  node "Instance N" as NodeN
+}
+
+database "Redis Cache" as Cache
+database "MySQL\nDatabase" as DB
+
+node "Observability Stack" {
+  component "Prometheus" as Prom
+  component "Grafana" as Grafana
+}
+
+Client --> LB : HTTPS
+LB --> Node1 : REST
+LB --> Node2 : REST
+LB --> NodeN : REST
+
+Node1 --> Cache
+Node2 --> Cache
+NodeN --> Cache
+
+Node1 --> DB
+Node2 --> DB
+NodeN --> DB
+
+Node1 -.-> Prom
+Node2 -.-> Prom
+NodeN -.-> Prom
+Grafana --> Prom
+@enduml

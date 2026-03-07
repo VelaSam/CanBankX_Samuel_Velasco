@@ -1,0 +1,48 @@
+@startuml LogicalViewDiagram
+skinparam packageStyle rectangle
+
+package "CanBankX Monolith" {
+    
+    component [API Router (Gin)] as Router
+    
+    package "Identity Bounded Context" as IdentityBC {
+        [User]
+        [Session]
+    }
+    
+    package "Accounts Bounded Context" as AccountsBC {
+        [Account]
+        [AccountBalance]
+    }
+    
+    package "Transfers Bounded Context" as TransfersBC {
+        [Transfer]
+        [Payee]
+    }
+    
+    package "Ledger Bounded Context" as LedgerBC {
+        [Transaction]
+        [LedgerEntry]
+    }
+    
+    Router --> IdentityBC : Authenticates
+    Router --> AccountsBC : Routes
+    Router --> TransfersBC : Routes
+    
+    TransfersBC --> AccountsBC : Verifies balance / Locks
+    TransfersBC --> LedgerBC : Records entries
+}
+
+database "MySQL Database" as DB {
+    [Identity Tables]
+    [Accounts Tables]
+    [Transfers Tables]
+    [Ledger Tables]
+}
+
+IdentityBC ..> [Identity Tables] : Reads/Writes
+AccountsBC ..> [Accounts Tables] : Reads/Writes
+TransfersBC ..> [Transfers Tables] : Reads/Writes
+LedgerBC ..> [Ledger Tables] : Reads/Writes
+
+@enduml

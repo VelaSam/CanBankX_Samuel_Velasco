@@ -1,0 +1,36 @@
+@startuml
+skinparam componentStyle uml2
+
+actor "Clients\n(Web/Mobile)" as Client
+node "KrakenD\nAPI Gateway" as Gateway
+
+node "Microservices (Go)" {
+  component "Identity & Auth\nService" as Identity
+  component "Accounts\nService" as Accounts
+  component "Transactions\nService" as Transactions
+}
+
+database "Identity DB" as DB_Id
+database "Accounts DB" as DB_Acc
+database "Transactions DB" as DB_Tx
+
+node "Observability Stack" {
+  component "Prometheus" as Prom
+  component "Grafana" as Grafana
+}
+
+Client --> Gateway : HTTPS
+Gateway --> Identity : REST / Internal Route
+Gateway --> Accounts : REST / Internal Route
+Gateway --> Transactions : REST / Internal Route
+
+Identity --> DB_Id
+Accounts --> DB_Acc
+Transactions --> DB_Tx
+
+Identity -.-> Prom
+Accounts -.-> Prom
+Transactions -.-> Prom
+Gateway -.-> Prom
+Grafana --> Prom
+@enduml
