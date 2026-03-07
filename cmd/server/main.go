@@ -9,6 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+
+	accounts "canbankx/internal/accounts/domain"
+	identity "canbankx/internal/identity/domain"
+	ledger "canbankx/internal/ledger/domain"
+	transfers "canbankx/internal/transfers/domain"
 )
 
 var DB *gorm.DB
@@ -25,6 +30,20 @@ func initDB() {
 		if err == nil {
 			DB = db
 			log.Println("Successfully connected to MySQL!")
+
+			err = db.AutoMigrate(
+				&identity.User{},
+				&identity.Session{},
+				&identity.KYCDocument{},
+				&accounts.Account{},
+				&transfers.Transfer{},
+				&ledger.Transaction{},
+				&ledger.LedgerEntry{},
+			)
+			if err != nil {
+				log.Fatalf("Failed to auto-migrate database: %v", err)
+			}
+			log.Println("Database migration completed successfully.")
 			return
 		}
 		log.Printf("Failed to connect to MySQL (%v). Retrying in 2 seconds...", err)
