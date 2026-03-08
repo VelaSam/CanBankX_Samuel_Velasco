@@ -9,7 +9,7 @@ Accepted
 Le projet CanBankX demande de démontrer les avantages et les performances d'une architecture orientée microservices (avec API Gateway, Load Balancing et Caching) par rapport à une approche plus classique (monolithique).
 
 ### Decision
-Nous adopterons une approche "Monolithe Modulaire" (**Modular Monolith**) pour la Phase 1. 
+Une approche "Monolithe Modulaire" (**Modular Monolith**) sera adoptée pour la Phase 1. 
 Dans ce modèle :
 1. Chaque "Bounded Context" (Identité, Comptes, Paiements) est implémenté dans un *package Go séparé*.
 2. Il n'y a qu'un **seul et unique point d'entrée (`main.go`)** hébergeant toutes les API REST.

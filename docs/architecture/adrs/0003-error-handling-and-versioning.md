@@ -6,7 +6,7 @@
 Accepted
 
 ### Context
-Pour garantir une intégration claire, sécurisée et évolutive, nous devons standardiser la manière dont notre API répond (succès et erreurs) et évolue dans le temps sans briser les contrats existants.
+Pour garantir une intégration claire, sécurisée et évolutive, la manière dont l'API répond (succès et erreurs) et évolue dans le temps sans briser les contrats existants doit être standardisée.
 
 ### Decision
 1. **Versionnage par URI :** Toutes les routes de l'API REST incluront une version majeure dans le chemin de l'URL, ex: `/api/v1/accounts`.
@@ -35,4 +35,4 @@ Exemple de réponse d'erreur 400:
 - Le versionnage par URI permet l'introduction d'une v2 en parallèle pendant une période de transition sans impacter les anciens clients.
 
 **Négatives :**
-- Ajoute de la *boilerplate* dans les contrôleurs pour formater chaque erreur de la même manière. Nous devrons écrire un *middleware* ou une fonction utilitaire en Go pour forcer ce contrat.
+- Ajoute de la *boilerplate* dans les contrôleurs pour formater chaque erreur de la même manière. Un *middleware* ou une fonction utilitaire en Go devra être écrit pour forcer ce contrat.
