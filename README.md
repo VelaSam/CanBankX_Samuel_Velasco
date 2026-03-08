@@ -41,6 +41,24 @@ Toute l'infrastructure démarre instantanément avec Docker :
 docker compose up -d --build
 ```
 L'API devrait maintenant être en ligne sur : `http://localhost:8080/health`.
+La documentation OpenAPI (Swagger) est publiquement accessible sur : `http://localhost:8080/swagger/index.html`.
+
+### 4. Peupler la base de données (Data Seeder)
+Afin de pouvoir simuler une utilisation réaliste lors des tests de charge, il faut générer un grand volume d'utilisateurs et de comptes dans la base de données.
+Une fois les conteneurs démarrés, exécutez le script ci-dessous (nécessite Go installé localement) :
+
+**Sur Windows (PowerShell) :**
+```powershell
+$env:DB_USER="canbankx_user"; $env:DB_PASSWORD="SecurePassword123!"; $env:DB_HOST="127.0.0.1"; $env:DB_PORT="3306"; go run cmd/seeder/main.go
+```
+*(Remplacez les identifiants par ceux de votre `.env` s'ils ont été modifiés).*
+
+**Sur Linux / Mac :**
+```bash
+DB_USER=canbankx_user DB_PASSWORD=SecurePassword123! DB_HOST=127.0.0.1 DB_PORT=3306 go run cmd/seeder/main.go
+```
+
+Ce script exportera les identifiants de comptes dans le fichier `tests/k6/users.json`, qui sera lu par k6 pour créer des transferts aléatoires.
 
 ## Tests Unitaires et Fonctionnels (Postman)
 Une collection complète est mise à disposition pour valider les 5 CU architecturaux.
@@ -59,14 +77,15 @@ Le dossier `tests/k6` comprend 4 paliers d'évaluation de l'architecture :
 4. `4_massive_stress.js` : Crash Test Ultime.
 
 ### Lancer la simulation (sans installation logicielle locale)
-Assurez-vous que l'API roule (`docker compose up`) et utilisez le conteneur k6 officiel pour simuler la charge par-dessus le réseau canbankx :
+Assurez-vous que l'API est fonctionnelle (`docker compose up`) et que la BD a été peuplée via l'étape 4. Nous utiliserons le conteneur k6 officiel en créant un volume pour lui donner accès au fichier `users.json` :
 
 **Sur Windows (PowerShell) :**
 ```powershell
-Get-Content tests/k6/1_monolith_baseline.js | docker run --rm -i --network canbankx_canbankx-net grafana/k6 run -e API_URL=http://api:8080 -
+docker run --rm -i -v ${PWD}/tests/k6:/scripts --network canbankx_canbankx-net grafana/k6 run -e API_URL=http://api:8080 /scripts/1_easy.js
 ```
 
 **Sur Linux / Mac / Serveur VM :**
 ```bash
-cat tests/k6/1_monolith_baseline.js | docker run --rm -i --network canbankx_canbankx-net grafana/k6 run -e API_URL=http://api:8080 -
+docker run --rm -i -v $(pwd)/tests/k6:/scripts --network canbankx_canbankx-net grafana/k6 run -e API_URL=http://api:8080 /scripts/1_easy.js
 ```
+*(Remplacez `1_easy.js` par un des scénarios listés ci-haut).*

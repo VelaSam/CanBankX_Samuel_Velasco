@@ -21,6 +21,19 @@ func (h *TransferHandler) RegisterRoutes(router *gin.RouterGroup) {
 	router.POST("/", h.CreateTransfer)
 }
 
+// CreateTransfer godoc
+// @Summary Effectuer un virement (UC-05)
+// @Description Transfère des fonds d'un compte source à un compte cible avec garantie Exactly-Once
+// @Tags Transfers
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body service.ProcessTransferRequest true "Process Transfer Request"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/transfers/ [post]
 func (h *TransferHandler) CreateTransfer(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {

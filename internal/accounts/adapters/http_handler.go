@@ -23,6 +23,19 @@ func (h *AccountHandler) RegisterRoutes(router *gin.RouterGroup) {
 	router.GET("/:id/history", h.GetAccountHistory)
 }
 
+// OpenAccount godoc
+// @Summary Ouvrir un compte bancaire
+// @Description Crée un nouveau compte (CHECKING ou SAVINGS) pour l'utilisateur authentifié
+// @Tags Accounts
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body service.OpenAccountRequest true "Open Account Request"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/accounts/ [post]
 func (h *AccountHandler) OpenAccount(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -53,6 +66,16 @@ func (h *AccountHandler) OpenAccount(c *gin.Context) {
 	c.JSON(http.StatusCreated, account)
 }
 
+// GetAccounts godoc
+// @Summary Lister les comptes
+// @Description Retourne tous les comptes appartenant à l'utilisateur authentifié
+// @Tags Accounts
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} apierrors.APIError
+// @Failure 500 {object} apierrors.APIError
+// @Router /api/v1/accounts/ [get]
 func (h *AccountHandler) GetAccounts(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -69,6 +92,19 @@ func (h *AccountHandler) GetAccounts(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"accounts": accounts})
 }
 
+// GetAccountHistory godoc
+// @Summary Consulter le solde et l'historique (UC-04)
+// @Description Récupère le solde calculé via le Ledger et les transactions récentes
+// @Tags Accounts
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Account ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 403 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/accounts/{id}/history [get]
 func (h *AccountHandler) GetAccountHistory(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {

@@ -23,6 +23,17 @@ func (h *IdentityHandler) RegisterRoutes(router *gin.RouterGroup) {
 	router.POST("/login/mfa", h.VerifyMFA)
 }
 
+// RegisterUser godoc
+// @Summary Enregistrer un nouvel utilisateur
+// @Description Crée un profil utilisateur (KYC PENDING)
+// @Tags Identity
+// @Accept json
+// @Produce json
+// @Param request body service.RegisterRequest true "Register User Request"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/identity/register [post]
 func (h *IdentityHandler) RegisterUser(c *gin.Context) {
 	var req service.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -54,6 +65,17 @@ func (h *IdentityHandler) RegisterUser(c *gin.Context) {
 	})
 }
 
+// Login godoc
+// @Summary S'authentifier (Étape 1)
+// @Description Valide le courriel/mot de passe et déclenche le MFA
+// @Tags Identity
+// @Accept json
+// @Produce json
+// @Param request body service.LoginRequest true "Login Request"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} apierrors.APIError
+// @Failure 401 {object} apierrors.APIError
+// @Router /api/v1/identity/login [post]
 func (h *IdentityHandler) Login(c *gin.Context) {
 	var req service.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -78,6 +100,17 @@ func (h *IdentityHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// VerifyMFA godoc
+// @Summary Vérifier le code MFA (Étape 2)
+// @Description Valide le code MFA et retourne le JWT d'accès complet
+// @Tags Identity
+// @Accept json
+// @Produce json
+// @Param request body service.VerifyMFARequest true "MFA Verify Request"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} apierrors.APIError
+// @Failure 401 {object} apierrors.APIError
+// @Router /api/v1/identity/login/mfa [post]
 func (h *IdentityHandler) VerifyMFA(c *gin.Context) {
 	var req service.VerifyMFARequest
 

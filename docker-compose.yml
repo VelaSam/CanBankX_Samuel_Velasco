@@ -25,6 +25,8 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-rootpassword}
       - MYSQL_DATABASE=${DB_NAME:-canbankx}
+      - MYSQL_USER=${DB_USER:-canbankx_user}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-rootpassword}
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
