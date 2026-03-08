@@ -7,7 +7,7 @@ Le modèle 4+1 décrit l'architecture selon cinq perspectives distinctes pour r�
 ## 1. Vue Logique (Logical View)
 La solution repose sur un **Monolithe Modulaire** partitionné par métier.
 
-![Logical View Diagram](puml/logical_view.puml)
+![Logical View Diagram Phase 1](puml/phase1_monolithique/logical_view_phase1_monolithique.png)
 - **Module Identity :** `User`, `Role`, `Session`, `KYCDocument`.
 - **Module Accounts :** `Account`, `AccountBalance`.
 - **Module Transfers :** `Transfer`, `Payee`.
@@ -19,9 +19,24 @@ Ces modules communiquent via des interfaces Go strictement définies (`ports`) s
 
 ## 2. Vue Processus (Process View)
 
-**Workflow (Paiement) :**
+Nous avons découpé l'application en 5 scénarios critiques (Cas d'utilisation), chacun disposant de son propre diagramme de flux :
 
-![Process View Diagram](puml/process_view.puml)
+### UC-01 : Création d'Utilisateur
+![Process View UC01](puml/phase1_monolithique/process_view_uc01_register.png)
+
+### UC-02 : Login & MFA
+![Process View UC02](puml/phase1_monolithique/process_view_uc02_login_mfa.png)
+
+### UC-03 : Ouverture de compte (Accounts)
+![Process View UC03](puml/phase1_monolithique/process_view_uc03_open_account.png)
+
+### UC-04 : Consultation du solde et historique (Ledger)
+![Process View UC04](puml/phase1_monolithique/process_view_uc04_consult_history.png)
+
+### UC-05 : Virement de fonds (Transfers)
+![Process View UC05](puml/phase1_monolithique/process_view_uc05_transfer.png)
+
+**Principale complexité (Virement) :**
 1. Requête HTTP entrante.
 2. Le **Router (Gin)** délègue au Middleware d'Authentification (validation JWT).
 3. Le **Contrôleur (Handler)** vérifie l'`Idempotency-Key` via le module *Transfers*.
@@ -42,13 +57,13 @@ Ces modules communiquent via des interfaces Go strictement définies (`ports`) s
 
 **Actuellement (Phase 1) :**
 
-![Deployment View Diagram Phase 1](puml/deployment_view_phase1.puml)
+![Deployment View Diagram Phase 1](puml/phase1_monolithique/deployment_view_phase1_monolithique.png)
 - Node 1: Serveur applicatif exécutant le binaire Go (Monolithe).
 - Node 2: Base de données MySQL.
 
 **Évolution prévue (Phase 2) :**
 
-![Deployment View Diagram Phase 2](puml/deployment_view_phase2.puml)
+![Deployment View Diagram Phase 2](puml/phase2_load_balancing/deployment_view_phase2_redis_LB.png)
 - **Load Balancer :** Nginx exposant l'application.
 - **App Nodes :** Instances de conteneurs Docker exécutant l'application Go.
 - **Cache Node :** Redis pour la mise en cache.
@@ -56,7 +71,7 @@ Ces modules communiquent via des interfaces Go strictement définies (`ports`) s
 
 **Évolution prévue (Phase 3) :**
 
-![Deployment View Diagram Phase 3](puml/deployment_view_phase3.puml)
+![Deployment View Diagram Phase 3](puml/phase3_microservices/deployment_view_phase3_microservices.png)
 - **API Gateway :** KrakenD routant les demandes.
 - **Services :** Microservices backend Go.
 - **Bases de données :** Une base de données isolée par service.

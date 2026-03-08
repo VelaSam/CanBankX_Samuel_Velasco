@@ -1,0 +1,45 @@
+@startuml process_view_uc05_transfer_phase1_monolithique
+title UC-05: Internal Transfer (Phase 1 Monolithique)
+autonumber
+
+actor Client
+participant "API Router" as Router
+participant "Auth Middleware" as Middleware
+participant "Transfers Handler" as Handler
+participant "Transfers Service" as Transfers
+database "MySQL" as DB
+
+Client -> Router: POST /api/v1/transfers (Bearer Token, Idempotency-Key)
+Router -> Middleware: intercept
+Middleware -> Middleware: Validate JWT & Extract UserID
+Middleware --> Router: Context updated
+
+Router -> Handler: Forward Request
+activate Handler
+Handler -> Transfers: ProcessTransfer(req)
+activate Transfers
+
+Transfers -> DB: SELECT * FROM transfers WHERE idempotency_key=?
+DB --> Transfers: Not found (If found, return existing immediately)
+
+Transfers -> DB: BEGIN Transaction
+activate DB
+Transfers -> DB: SELECT * FROM accounts WHERE id=? FOR UPDATE (Source)
+Transfers -> DB: SELECT * FROM accounts WHERE id=? FOR UPDATE (Target)
+DB --> Transfers: Accounts locked & retrieved
+
+Transfers -> Transfers: Verify Source.Balance >= Amount
+Transfers -> DB: UPDATE accounts SET balance=... (Source - Amount, Target + Amount)
+Transfers -> DB: INSERT INTO transactions (LedgerTx)
+Transfers -> DB: INSERT INTO ledger_entries (Source Debit, Target Credit)
+Transfers -> DB: INSERT INTO transfers
+Transfers -> DB: COMMIT Transaction
+deactivate DB
+
+Transfers --> Handler: Success (Transfer details)
+deactivate Transfers
+
+Handler --> Client: 201 Created
+deactivate Handler
+
+@enduml

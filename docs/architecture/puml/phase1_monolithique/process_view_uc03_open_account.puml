@@ -1,0 +1,33 @@
+@startuml process_view_uc03_open_account_phase1_monolithique
+title UC-03: Open Account (Phase 1 Monolithique)
+autonumber
+
+actor Client
+participant "API Router" as Router
+participant "Auth Middleware" as Middleware
+participant "Accounts Handler" as Handler
+participant "Accounts Service" as Accounts
+database "MySQL" as DB
+
+Client -> Router: POST /api/v1/accounts/ (Bearer Token)
+Router -> Middleware: intercept
+activate Middleware
+Middleware -> Middleware: Validate JWT Token
+Middleware -> Middleware: Extract UserID from Claims
+Middleware --> Router: Inject UserID Context
+deactivate Middleware
+
+Router -> Handler: Forward Request
+activate Handler
+Handler -> Accounts: OpenAccount(req)
+activate Accounts
+
+Accounts -> DB: BEGIN Transaction
+Accounts -> DB: INSERT INTO accounts (status: ACTIVE)
+Accounts -> DB: COMMIT Transaction
+Accounts --> Handler: Success (Account details)
+deactivate Accounts
+Handler --> Client: 201 Created
+deactivate Handler
+
+@enduml

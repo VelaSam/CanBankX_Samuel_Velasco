@@ -1,0 +1,42 @@
+@startuml process_view_uc02_login_mfa_phase1_monolithique
+title UC-02: Login and MFA (Phase 1 Monolithique)
+autonumber
+
+actor Client
+participant "API Router" as Router
+participant "Identity Handler" as Handler
+participant "Identity Service" as Identity
+participant "Auth/JWT Engine" as Auth
+database "MySQL" as DB
+
+== Étape 1: Obtention du Jeton MFA ==
+Client -> Router: POST /api/v1/identity/login
+Router -> Handler: Forward Request
+Handler -> Identity: Login(req)
+activate Identity
+Identity -> DB: SELECT * FROM users WHERE email=?
+DB --> Identity: User details
+Identity -> Identity: Verify Password
+Identity -> Auth: Generate MFA Token (Role: PRE_AUTH)
+Auth --> Identity: MFA Token
+Identity --> Handler: LoginResponse (mfaToken)
+deactivate Identity
+Handler --> Client: 200 OK + mfaToken
+
+== Étape 2: Vérification MFA & Jeton d'accès ==
+Client -> Router: POST /api/v1/identity/login/mfa (mfaToken, code)
+Router -> Handler: Forward Request
+Handler -> Identity: VerifyMFA(req)
+activate Identity
+Identity -> Auth: Validate MFA Token
+Auth --> Identity: Token Valid (Role == PRE_AUTH)
+Identity -> Identity: Verify OTP code (mock)
+Identity -> Auth: Generate Access Token (Role: USER)
+Auth --> Identity: Access Token
+Identity -> DB: INSERT INTO sessions
+DB --> Identity: Success
+Identity --> Handler: HTTP TokenResponse
+deactivate Identity
+Handler --> Client: 200 OK + accessToken
+
+@enduml

@@ -23,7 +23,7 @@ Surveillance transactionnelle, archivage légal et détection des patterns anorm
 
 Dans le cadre de cette architecture, nous nous concentrons sur les 5 Use Cases (UC) indispensables listés dans le cahier des charges :
 
-![Diagramme des Cas d'Utilisation](puml/uc_diagram.puml)
+![Diagramme des Cas d'Utilisation](puml/uc_diagram.png)
 
 ### UC-01 : Inscription & Vérification d'identité (KYC)
 - **Objectif :** Permettre à un client d’ouvrir un profil bancaire conforme aux exigences KYC/AML canadiennes.

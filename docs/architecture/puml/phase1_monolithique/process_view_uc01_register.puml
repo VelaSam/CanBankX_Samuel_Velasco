@@ -1,0 +1,24 @@
+@startuml process_view_uc01_register_phase1_monolithique
+title UC-01: User Registration (Phase 1 Monolithique)
+autonumber
+
+actor Client
+participant "API Router" as Router
+participant "Identity Handler" as Handler
+participant "Identity Service" as Identity
+participant "UserService (Bcrypt)" as Bcrypt
+database "MySQL" as DB
+
+Client -> Router: POST /api/v1/identity/register
+Router -> Handler: Forward Request
+Handler -> Identity: RegisterUser(req)
+activate Identity
+Identity -> Bcrypt: Hash Password
+Bcrypt --> Identity: Hashed Password
+Identity -> DB: INSERT INTO users (Status: PENDING)
+DB --> Identity: Success
+Identity --> Handler: User Registered
+deactivate Identity
+Handler --> Client: 201 Created
+
+@enduml
