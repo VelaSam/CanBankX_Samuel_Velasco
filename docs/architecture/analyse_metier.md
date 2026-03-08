@@ -21,7 +21,7 @@ Surveillance transactionnelle, archivage légal et détection des patterns anorm
 
 ## Les 5 Cas d'Utilisation (UC) Principaux
 
-Dans le cadre de cette architecture, nous nous concentrons sur les 5 Use Cases (UC) indispensables listés dans le cahier des charges :
+Dans le cadre de cette architecture, l'accent est mis sur les 5 Use Cases (UC) indispensables listés dans le cahier des charges :
 
 ![Diagramme des Cas d'Utilisation](puml/uc_diagram.png)
 

@@ -19,7 +19,7 @@ Ces modules communiquent via des interfaces Go strictement définies (`ports`) s
 
 ## 2. Vue Processus (Process View)
 
-Nous avons découpé l'application en 5 scénarios critiques (Cas d'utilisation), chacun disposant de son propre diagramme de flux :
+L'application a été découpée en 5 scénarios critiques (Cas d'utilisation), chacun disposant de son propre diagramme de flux :
 
 ### UC-01 : Création d'Utilisateur
 ![Process View UC01](puml/phase1_monolithique/process_view_uc01_register.png)
