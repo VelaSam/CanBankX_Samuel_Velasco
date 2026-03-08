@@ -16,9 +16,13 @@ import (
 	identityAdapters "canbankx/internal/identity/adapters"
 	identity "canbankx/internal/identity/domain"
 	identityService "canbankx/internal/identity/service"
+	ledgerAdapters "canbankx/internal/ledger/adapters"
 	ledger "canbankx/internal/ledger/domain"
+	ledgerService "canbankx/internal/ledger/service"
 	"canbankx/internal/pkg/middleware"
+	transfersAdapters "canbankx/internal/transfers/adapters"
 	transfers "canbankx/internal/transfers/domain"
+	transfersService "canbankx/internal/transfers/service"
 )
 
 var DB *gorm.DB
@@ -84,16 +88,31 @@ func main() {
 	identityRoutes := api.Group("/identity")
 	identityHandler.RegisterRoutes(identityRoutes)
 
+	// DI for Ledger
+	ledgerRepo := ledgerAdapters.NewLedgerRepository(DB)
+	ledgerSvc := ledgerService.NewLedgerService(ledgerRepo)
+
+	// DI for Accounts
 	accountRepo := accountsAdapters.NewAccountRepository(DB)
-	accountSvc := accountsService.NewAccountService(accountRepo)
+	accountSvc := accountsService.NewAccountService(accountRepo, ledgerSvc)
 	accountHandler := accountsAdapters.NewAccountHandler(accountSvc)
+
+	// DI for Transfers
+	transferRepo := transfersAdapters.NewTransferRepository(DB)
+	transferSvc := transfersService.NewTransferService(transferRepo)
+	transferHandler := transfersAdapters.NewTransferHandler(transferSvc)
 
 	// Protected Routes
 	protected := api.Group("/")
 	protected.Use(middleware.JWTAuthMiddleware())
 
+	// Routes for Accounts
 	accountRoutes := protected.Group("/accounts")
 	accountHandler.RegisterRoutes(accountRoutes)
+
+	// Routes for Transfers
+	transferRoutes := protected.Group("/transfers")
+	transferHandler.RegisterRoutes(transferRoutes)
 
 	port := os.Getenv("PORT")
 	if port == "" {

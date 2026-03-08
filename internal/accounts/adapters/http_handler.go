@@ -17,10 +17,10 @@ func NewAccountHandler(svc service.AccountService) *AccountHandler {
 	return &AccountHandler{svc: svc}
 }
 
-// RegisterRoutes registers the protected handlers
 func (h *AccountHandler) RegisterRoutes(router *gin.RouterGroup) {
 	router.POST("/", h.OpenAccount)
 	router.GET("/", h.GetAccounts)
+	router.GET("/:id/history", h.GetAccountHistory)
 }
 
 func (h *AccountHandler) OpenAccount(c *gin.Context) {
@@ -67,4 +67,35 @@ func (h *AccountHandler) GetAccounts(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"accounts": accounts})
+}
+
+func (h *AccountHandler) GetAccountHistory(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, apierrors.ErrUnauthorized)
+		return
+	}
+
+	var routeParams struct {
+		ID uint `uri:"id" binding:"required"`
+	}
+	if err := c.ShouldBindUri(&routeParams); err != nil {
+		c.JSON(http.StatusBadRequest, apierrors.ErrInvalidInput)
+		return
+	}
+
+	entries, balance, apiErr := h.svc.GetAccountHistory(userID.(uint), routeParams.ID)
+	if apiErr != nil {
+		status := http.StatusInternalServerError
+		if apiErr.ErrorCode == "FORBIDDEN" {
+			status = http.StatusForbidden
+		}
+		c.JSON(status, apiErr)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"balance": balance,
+		"entries": entries,
+	})
 }
