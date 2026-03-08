@@ -1,7 +1,7 @@
 {
     "info": {
         "name": "CanBankX API Tests",
-        "description": "Tests des routes d'identité et de création de compte.",
+        "description": "Tests des routes d'identité et de création de compte. NOTE: Utilisez la variable {{HOST}} pour basculer entre 'localhost' ou l'IP de la VM (ex: 10.194.32.243).",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
@@ -11,10 +11,10 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                    "raw": "http://localhost:8080/health",
+                    "raw": "http://{{HOST}}:8080/health",
                     "protocol": "http",
                     "host": [
-                        "localhost"
+                        "{{HOST}}"
                     ],
                     "port": "8080",
                     "path": [
@@ -38,10 +38,10 @@
                     "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Smith\",\n  \"email\": \"alice@test.com\",\n  \"password\": \"Password123!\",\n  \"sin\": \"987654321\"\n}"
                 },
                 "url": {
-                    "raw": "http://localhost:8080/api/v1/identity/register",
+                    "raw": "http://{{HOST}}:8080/api/v1/identity/register",
                     "protocol": "http",
                     "host": [
-                        "localhost"
+                        "{{HOST}}"
                     ],
                     "port": "8080",
                     "path": [
@@ -80,10 +80,10 @@
                     "raw": "{\n  \"email\": \"alice@test.com\",\n  \"password\": \"Password123!\"\n}"
                 },
                 "url": {
-                    "raw": "http://localhost:8080/api/v1/identity/login",
+                    "raw": "http://{{HOST}}:8080/api/v1/identity/login",
                     "protocol": "http",
                     "host": [
-                        "localhost"
+                        "{{HOST}}"
                     ],
                     "port": "8080",
                     "path": [
@@ -103,7 +103,6 @@
                     "script": {
                         "exec": [
                             "var jsonData = pm.response.json();",
-                            "// On essaie de récupérer le token (il peut s'appeler 'token' ou 'accessToken' selon votre implémentation)",
                             "if (jsonData.token) { pm.collectionVariables.set(\"accessToken\", jsonData.token); } else if (jsonData.accessToken) { pm.collectionVariables.set(\"accessToken\", jsonData.accessToken); }"
                         ],
                         "type": "text/javascript"
@@ -123,10 +122,10 @@
                     "raw": "{\n  \"mfaToken\": \"{{mfaToken}}\",\n  \"code\": \"123456\"\n}"
                 },
                 "url": {
-                    "raw": "http://localhost:8080/api/v1/identity/login/mfa",
+                    "raw": "http://{{HOST}}:8080/api/v1/identity/login/mfa",
                     "protocol": "http",
                     "host": [
-                        "localhost"
+                        "{{HOST}}"
                     ],
                     "port": "8080",
                     "path": [
@@ -154,10 +153,10 @@
                     "raw": "{\n  \"type\": \"CHECKING\"\n}"
                 },
                 "url": {
-                    "raw": "http://localhost:8080/api/v1/accounts/",
+                    "raw": "http://{{HOST}}:8080/api/v1/accounts/",
                     "protocol": "http",
                     "host": [
-                        "localhost"
+                        "{{HOST}}"
                     ],
                     "port": "8080",
                     "path": [
@@ -194,10 +193,10 @@
                     "raw": "{\n  \"type\": \"CHECKING\"\n}"
                 },
                 "url": {
-                    "raw": "http://localhost:8080/api/v1/accounts/",
+                    "raw": "http://{{HOST}}:8080/api/v1/accounts/",
                     "protocol": "http",
                     "host": [
-                        "localhost"
+                        "{{HOST}}"
                     ],
                     "port": "8080",
                     "path": [
@@ -225,10 +224,10 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                    "raw": "http://localhost:8080/api/v1/accounts/",
+                    "raw": "http://{{HOST}}:8080/api/v1/accounts/",
                     "protocol": "http",
                     "host": [
-                        "localhost"
+                        "{{HOST}}"
                     ],
                     "port": "8080",
                     "path": [
@@ -256,10 +255,10 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                    "raw": "http://localhost:8080/api/v1/accounts/1/history",
+                    "raw": "http://{{HOST}}:8080/api/v1/accounts/1/history",
                     "protocol": "http",
                     "host": [
-                        "localhost"
+                        "{{HOST}}"
                     ],
                     "port": "8080",
                     "path": [
@@ -297,10 +296,10 @@
                     "raw": "{\n  \"idempotencyKey\": \"tx-req-001\",\n  \"sourceAccount\": 1,\n  \"targetAccount\": 2,\n  \"amount\": 50.0\n}"
                 },
                 "url": {
-                    "raw": "http://localhost:8080/api/v1/transfers",
+                    "raw": "http://{{HOST}}:8080/api/v1/transfers",
                     "protocol": "http",
                     "host": [
-                        "localhost"
+                        "{{HOST}}"
                     ],
                     "port": "8080",
                     "path": [
@@ -313,6 +312,10 @@
         }
     ],
     "variable": [
+        {
+            "key": "HOST",
+            "value": "localhost"
+        },
         {
             "key": "mfaToken",
             "value": ""
