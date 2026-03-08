@@ -10,39 +10,26 @@ participant "Accounts Bounded Context" as Accounts
 participant "Ledger Bounded Context" as Ledger
 database "MySQL" as DB
 
-Client -> Router: POST /api/v1/transfers (Idempotency-Key)
-Router -> Auth: Validate JWT Token
-Auth --> Router: Token Valid
-Router -> Handler: Handle Request
-
-Handler -> Transfers: ProcessTransfer(req)
-activate Transfers
-
-Transfers -> DB: BEGIN Transaction
-activate DB
-
-Transfers -> Transfers: Check Idempotency-Key
-
-Transfers -> Accounts: Lock source & target accounts (FOR UPDATE)
+Client -> Router: POST /api/v1/accounts (Bearer Token)
+Router -> Auth: Execution (gin handler)
+Auth -> Auth: Validate JWT Token & Extract UserID
+Auth --> Router: Add UserID to Context
+Router -> Handler: Forward Request
+ 
+Handler -> Accounts: OpenAccount(req)
 activate Accounts
-Accounts -> DB: SELECT ... FOR UPDATE
-Accounts --> Transfers: Accounts Locked
-deactivate Accounts
 
-Transfers -> Transfers: Verify Sufficient Funds
-
-Transfers -> Ledger: Record Transaction & Entries
-activate Ledger
-Ledger -> DB: INSERT INTO ledger_entries
-Ledger --> Transfers: Entries Recorded
-deactivate Ledger
-
-Transfers -> DB: COMMIT Transaction
+Accounts -> DB: BEGIN Transaction
+activate DB
+ 
+Accounts -> DB: INSERT INTO accounts
+Accounts -> DB: COMMIT Transaction
 deactivate DB
 
-Transfers --> Handler: Success
-deactivate Transfers
-
+Accounts --> Handler: Success (Account Created)
+deactivate Accounts
+ 
 Handler --> Client: 201 Created
+activate Accounts
 
 @enduml

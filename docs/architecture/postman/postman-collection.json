@@ -1,0 +1,203 @@
+{
+    "info": {
+        "name": "CanBankX API Tests",
+        "description": "Tests des routes d'identité et de création de compte.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Register User",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Smith\",\n  \"email\": \"alice@test.com\",\n  \"password\": \"Password123!\",\n  \"sin\": \"987654321\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:8080/api/v1/identity/register",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "api",
+                        "v1",
+                        "identity",
+                        "register"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "2. Login (Get MFA Token)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            "if (jsonData.mfaToken) { pm.collectionVariables.set(\"mfaToken\", jsonData.mfaToken); }"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"email\": \"alice@test.com\",\n  \"password\": \"Password123!\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:8080/api/v1/identity/login",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "api",
+                        "v1",
+                        "identity",
+                        "login"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "3. Verify MFA (Get Access Token)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            "// On essaie de récupérer le token (il peut s'appeler 'token' ou 'accessToken' selon votre implémentation)",
+                            "if (jsonData.token) { pm.collectionVariables.set(\"accessToken\", jsonData.token); } else if (jsonData.accessToken) { pm.collectionVariables.set(\"accessToken\", jsonData.accessToken); }"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"mfaToken\": \"{{mfaToken}}\",\n  \"code\": \"123456\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:8080/api/v1/identity/login/mfa",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "api",
+                        "v1",
+                        "identity",
+                        "login",
+                        "mfa"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "4. Test Protected Route (No Token) - Expect 401",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"type\": \"CHECKING\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:8080/api/v1/accounts",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "api",
+                        "v1",
+                        "accounts"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "5. Test Protected Route (With Token) - Expect 201",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"type\": \"CHECKING\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:8080/api/v1/accounts",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "api",
+                        "v1",
+                        "accounts"
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "mfaToken",
+            "value": ""
+        },
+        {
+            "key": "accessToken",
+            "value": ""
+        }
+    ]
+}
