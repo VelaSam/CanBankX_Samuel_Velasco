@@ -1,13 +1,17 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
+	_ "canbankx/docs" // Swagger docs
+
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
@@ -38,7 +42,7 @@ func initDB() {
 		db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 		if err == nil {
 			DB = db
-			log.Println("Successfully connected to MySQL!")
+			slog.Info("Successfully connected to MySQL!")
 
 			err = db.AutoMigrate(
 				&identity.User{},
@@ -50,19 +54,41 @@ func initDB() {
 				&ledger.LedgerEntry{},
 			)
 			if err != nil {
-				log.Fatalf("Failed to auto-migrate database: %v", err)
+				slog.Error("Failed to auto-migrate database", "error", err)
+				os.Exit(1)
 			}
-			log.Println("Database migration completed successfully.")
+			slog.Info("Database migration completed successfully.")
 			return
 		}
-		log.Printf("Failed to connect to MySQL (%v). Retrying in 2 seconds...", err)
+		slog.Warn("Failed to connect to MySQL", "error", err, "retry_in", "2s")
 		time.Sleep(2 * time.Second)
 	}
-	log.Fatal("Could not connect to the database after 15 attempts.")
+	slog.Error("Could not connect to the database after 15 attempts.")
+	os.Exit(1)
 }
 
+// @title CanBankX API
+// @version 1.0
+// @description API de la plateforme bancaire CanBankX
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@canbankx.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 func main() {
-	log.Println("Starting CanBankX Monolith...")
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
+	slog.Info("Starting CanBankX Monolith...")
 
 	initDB()
 
@@ -81,6 +107,8 @@ func main() {
 	})
 
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	api := r.Group("/api/v1")
 
@@ -123,8 +151,9 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("Server listening on port %s", port)
+	slog.Info("Server listening", "port", port)
 	if err := r.Run(":" + port); err != nil {
-		log.Fatal(err)
+		slog.Error("Server crashed", "error", err)
+		os.Exit(1)
 	}
 }

@@ -1,0 +1,340 @@
+basePath: /
+definitions:
+  canbankx_internal_accounts_service.OpenAccountRequest:
+    properties:
+      type:
+        enum:
+        - CHECKING
+        - SAVINGS
+        type: string
+    required:
+    - type
+    type: object
+  canbankx_internal_identity_service.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  canbankx_internal_identity_service.RegisterRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      sin:
+        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    - password
+    - sin
+    type: object
+  canbankx_internal_identity_service.VerifyMFARequest:
+    properties:
+      code:
+        type: string
+      mfaToken:
+        type: string
+    required:
+    - code
+    - mfaToken
+    type: object
+  canbankx_internal_pkg_errors.APIError:
+    properties:
+      details:
+        items:
+          type: string
+        type: array
+      error_code:
+        type: string
+      message:
+        type: string
+    type: object
+  canbankx_internal_transfers_service.ProcessTransferRequest:
+    properties:
+      amount:
+        type: number
+      idempotencyKey:
+        type: string
+      sourceAccount:
+        type: integer
+      targetAccount:
+        type: integer
+    required:
+    - amount
+    - idempotencyKey
+    - sourceAccount
+    - targetAccount
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@canbankx.com
+    name: API Support
+  description: API de la plateforme bancaire CanBankX
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: CanBankX API
+  version: "1.0"
+paths:
+  /api/v1/accounts/:
+    get:
+      description: Retourne tous les comptes appartenant à l'utilisateur authentifié
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+      security:
+      - BearerAuth: []
+      summary: Lister les comptes
+      tags:
+      - Accounts
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouveau compte (CHECKING ou SAVINGS) pour l'utilisateur
+        authentifié
+      parameters:
+      - description: Open Account Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/canbankx_internal_accounts_service.OpenAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Ouvrir un compte bancaire
+      tags:
+      - Accounts
+  /api/v1/accounts/{id}/history:
+    get:
+      description: Récupère le solde calculé via le Ledger et les transactions récentes
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Consulter le solde et l'historique (UC-04)
+      tags:
+      - Accounts
+  /api/v1/identity/login:
+    post:
+      consumes:
+      - application/json
+      description: Valide le courriel/mot de passe et déclenche le MFA
+      parameters:
+      - description: Login Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/canbankx_internal_identity_service.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+      summary: S'authentifier (Étape 1)
+      tags:
+      - Identity
+  /api/v1/identity/login/mfa:
+    post:
+      consumes:
+      - application/json
+      description: Valide le code MFA et retourne le JWT d'accès complet
+      parameters:
+      - description: MFA Verify Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/canbankx_internal_identity_service.VerifyMFARequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+      summary: Vérifier le code MFA (Étape 2)
+      tags:
+      - Identity
+  /api/v1/identity/register:
+    post:
+      consumes:
+      - application/json
+      description: Crée un profil utilisateur (KYC PENDING)
+      parameters:
+      - description: Register User Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/canbankx_internal_identity_service.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Enregistrer un nouvel utilisateur
+      tags:
+      - Identity
+  /api/v1/transfers/:
+    post:
+      consumes:
+      - application/json
+      description: Transfère des fonds d'un compte source à un compte cible avec garantie
+        Exactly-Once
+      parameters:
+      - description: Process Transfer Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/canbankx_internal_transfers_service.ProcessTransferRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Effectuer un virement (UC-05)
+      tags:
+      - Transfers
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
