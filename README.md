@@ -13,6 +13,7 @@ CanBankX (sur cette branche) est une API REST développée en Go en Monolithe Mo
 Ce README est uniquement présent sur la branche `canbankx_phase1_monolithique`, il sera modifié pour les autres version
 Clonez ce repo et aller sur la branche de la phase 1 :
 ```bash
+git clone https://github.com/VelaSam/CanBankX_Samuel_Velasco CanBankX
 cd CanBankX
 git checkout canbankx_phase1_monolithique
 ```
