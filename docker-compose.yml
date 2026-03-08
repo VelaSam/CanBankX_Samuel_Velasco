@@ -31,6 +31,26 @@ services:
     networks:
       - canbankx-net
 
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - canbankx-net
+    depends_on:
+      - api
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - canbankx-net
+    depends_on:
+      - prometheus
+
 networks:
   canbankx-net:
     driver: bridge

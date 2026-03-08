@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
@@ -28,7 +29,6 @@ import (
 var DB *gorm.DB
 
 func initDB() {
-	// Wait to make sure MySQL is started
 	dsn := os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASSWORD") + "@tcp(" + os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT") + ")/" + os.Getenv("DB_NAME") + "?charset=utf8mb4&parseTime=True&loc=Local"
 	if os.Getenv("DB_USER") == "" {
 		dsn = "root:rootpassword@tcp(localhost:3306)/canbankx?charset=utf8mb4&parseTime=True&loc=Local"
@@ -68,6 +68,8 @@ func main() {
 
 	r := gin.Default()
 
+	r.Use(middleware.MetricsMiddleware())
+
 	r.GET("/health", func(c *gin.Context) {
 		status := "UP"
 		if err := DB.Exec("SELECT 1").Error; err != nil {
@@ -77,6 +79,8 @@ func main() {
 			"status": status,
 		})
 	})
+
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	api := r.Group("/api/v1")
 
