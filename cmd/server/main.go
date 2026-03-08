@@ -10,11 +10,14 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	accountsAdapters "canbankx/internal/accounts/adapters"
 	accounts "canbankx/internal/accounts/domain"
+	accountsService "canbankx/internal/accounts/service"
 	identityAdapters "canbankx/internal/identity/adapters"
 	identity "canbankx/internal/identity/domain"
 	identityService "canbankx/internal/identity/service"
 	ledger "canbankx/internal/ledger/domain"
+	"canbankx/internal/pkg/middleware"
 	transfers "canbankx/internal/transfers/domain"
 )
 
@@ -80,6 +83,17 @@ func main() {
 
 	identityRoutes := api.Group("/identity")
 	identityHandler.RegisterRoutes(identityRoutes)
+
+	accountRepo := accountsAdapters.NewAccountRepository(DB)
+	accountSvc := accountsService.NewAccountService(accountRepo)
+	accountHandler := accountsAdapters.NewAccountHandler(accountSvc)
+
+	// Protected Routes
+	protected := api.Group("/")
+	protected.Use(middleware.JWTAuthMiddleware())
+
+	accountRoutes := protected.Group("/accounts")
+	accountHandler.RegisterRoutes(accountRoutes)
 
 	port := os.Getenv("PORT")
 	if port == "" {
