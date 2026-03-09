@@ -8,6 +8,8 @@ import (
 
 	_ "canbankx/docs" // Swagger docs
 
+	"github.com/joho/godotenv"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
@@ -95,6 +97,11 @@ func initDB() {
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
+
+	// Attempt to load .env file if it exists
+	if err := godotenv.Load(); err != nil {
+		slog.Info("No .env file found or unable to load, relying on system environment variables")
+	}
 
 	slog.Info("Starting CanBankX Monolith...")
 
