@@ -7,13 +7,15 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /canbankx ./cmd/server/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /identity ./cmd/identity/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /accounts ./cmd/accounts/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /transactions ./cmd/transactions/main.go
 
 FROM alpine:latest
 
 WORKDIR /
-COPY --from=builder /canbankx /canbankx
+COPY --from=builder /identity /identity
+COPY --from=builder /accounts /accounts
+COPY --from=builder /transactions /transactions
 
-EXPOSE 8080
-
-ENTRYPOINT ["/canbankx"]
+EXPOSE 8081 8082 8083

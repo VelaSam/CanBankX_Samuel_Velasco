@@ -1,34 +1,119 @@
 services:
-  api:
+  identity-api:
     build: .
+    command: ["/identity"]
     expose:
-      - "8080"
+      - "8081"
     environment:
-      - DB_HOST=${DB_HOST:-db}
-      - DB_PORT=${DB_PORT:-3306}
-      - DB_USER=${DB_USER:-root}
-      - DB_PASSWORD=${DB_PASSWORD:-rootpassword}
-      - DB_NAME=${DB_NAME:-canbankx}
+      - DB_HOST=identity-db
+      - DB_PORT=3306
+      - DB_USER=${DB_USER:-canbankx_user}
+      - DB_PASSWORD=${DB_PASSWORD:-SecurePassword123!}
+      - DB_NAME=identity_db
       - JWT_SECRET=${JWT_SECRET:-fallback_secret_for_dev_only}
       - GIN_MODE=${GIN_MODE:-debug}
-      - API_URL=${API_URL:-http://localhost:8080}
-      - REDIS_URL=redis:6379
+      - PORT=8081
     depends_on:
-      db:
+      identity-db:
         condition: service_healthy
     networks:
       - canbankx-net
-    deploy:
-      replicas: 3
 
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  accounts-api:
+    build: .
+    command: ["/accounts"]
+    expose:
+      - "8082"
+    environment:
+      - DB_HOST=accounts-db
+      - DB_PORT=3306
+      - DB_USER=${DB_USER:-canbankx_user}
+      - DB_PASSWORD=${DB_PASSWORD:-SecurePassword123!}
+      - DB_NAME=accounts_db
+      - JWT_SECRET=${JWT_SECRET:-fallback_secret_for_dev_only}
+      - REDIS_URL=redis:6379
+      - GIN_MODE=${GIN_MODE:-debug}
+      - PORT=8082
     depends_on:
-      - api
+      accounts-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - canbankx-net
+
+  transactions-api:
+    build: .
+    command: ["/transactions"]
+    expose:
+      - "8083"
+    environment:
+      - DB_HOST=transactions-db
+      - DB_PORT=3306
+      - DB_USER=${DB_USER:-canbankx_user}
+      - DB_PASSWORD=${DB_PASSWORD:-SecurePassword123!}
+      - DB_NAME=transactions_db
+      - ACCOUNTS_SERVICE_URL=http://accounts-api:8082
+      - JWT_SECRET=${JWT_SECRET:-fallback_secret_for_dev_only}
+      - REDIS_URL=redis:6379
+      - GIN_MODE=${GIN_MODE:-debug}
+      - PORT=8083
+    depends_on:
+      transactions-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - canbankx-net
+
+  identity-db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-SecurePassword123!}
+      - MYSQL_DATABASE=identity_db
+      - MYSQL_USER=${DB_USER:-canbankx_user}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-SecurePassword123!}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - canbankx-net
+
+  accounts-db:
+    image: mysql:8.0
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-SecurePassword123!}
+      - MYSQL_DATABASE=accounts_db
+      - MYSQL_USER=${DB_USER:-canbankx_user}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-SecurePassword123!}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - canbankx-net
+
+  transactions-db:
+    image: mysql:8.0
+    ports:
+      - "3308:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-SecurePassword123!}
+      - MYSQL_DATABASE=transactions_db
+      - MYSQL_USER=${DB_USER:-canbankx_user}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-SecurePassword123!}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - canbankx-net
 
@@ -39,22 +124,18 @@ services:
     networks:
       - canbankx-net
 
-  db:
-    image: mysql:8.0
+  krakend:
+    image: devopsfaith/krakend:latest
     ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-rootpassword}
-      - MYSQL_DATABASE=${DB_NAME:-canbankx}
-      - MYSQL_USER=${DB_USER:-canbankx_user}
-      - MYSQL_PASSWORD=${DB_PASSWORD:-rootpassword}
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - "8080:8080"
+    volumes:
+      - ./krakend/krakend.json:/etc/krakend/krakend.json
     networks:
       - canbankx-net
+    depends_on:
+      - identity-api
+      - accounts-api
+      - transactions-api
 
   prometheus:
     image: prom/prometheus:latest
@@ -65,7 +146,9 @@ services:
     networks:
       - canbankx-net
     depends_on:
-      - nginx
+      - identity-api
+      - accounts-api
+      - transactions-api
 
   grafana:
     image: grafana/grafana:latest

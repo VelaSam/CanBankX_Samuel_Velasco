@@ -1,0 +1,155 @@
+{
+    "version": 3,
+    "name": "CanBankX API Gateway",
+    "port": 8080,
+    "timeout": "3000ms",
+    "cache_ttl": "300s",
+    "output_encoding": "json",
+    "endpoints": [
+        {
+            "endpoint": "/api/v1/identity/register",
+            "method": "POST",
+            "output_encoding": "no-op",
+            "input_headers": [
+                "Content-Type"
+            ],
+            "backend": [
+                {
+                    "url_pattern": "/api/v1/identity/register",
+                    "encoding": "no-op",
+                    "method": "POST",
+                    "host": [
+                        "http://identity-api:8081"
+                    ]
+                }
+            ]
+        },
+        {
+            "endpoint": "/api/v1/identity/login",
+            "method": "POST",
+            "output_encoding": "no-op",
+            "input_headers": [
+                "Content-Type"
+            ],
+            "backend": [
+                {
+                    "url_pattern": "/api/v1/identity/login",
+                    "encoding": "no-op",
+                    "method": "POST",
+                    "host": [
+                        "http://identity-api:8081"
+                    ]
+                }
+            ]
+        },
+        {
+            "endpoint": "/api/v1/identity/login/mfa",
+            "method": "POST",
+            "output_encoding": "no-op",
+            "input_headers": [
+                "Content-Type"
+            ],
+            "backend": [
+                {
+                    "url_pattern": "/api/v1/identity/login/mfa",
+                    "encoding": "no-op",
+                    "method": "POST",
+                    "host": [
+                        "http://identity-api:8081"
+                    ]
+                }
+            ]
+        },
+        {
+            "endpoint": "/api/v1/accounts/",
+            "method": "GET",
+            "output_encoding": "no-op",
+            "input_headers": [
+                "Content-Type",
+                "Authorization"
+            ],
+            "backend": [
+                {
+                    "url_pattern": "/api/v1/accounts/",
+                    "encoding": "no-op",
+                    "method": "GET",
+                    "host": [
+                        "http://accounts-api:8082"
+                    ]
+                }
+            ]
+        },
+        {
+            "endpoint": "/api/v1/accounts/",
+            "method": "POST",
+            "output_encoding": "no-op",
+            "input_headers": [
+                "Content-Type",
+                "Authorization"
+            ],
+            "backend": [
+                {
+                    "url_pattern": "/api/v1/accounts/",
+                    "encoding": "no-op",
+                    "method": "POST",
+                    "host": [
+                        "http://accounts-api:8082"
+                    ]
+                }
+            ]
+        },
+        {
+            "endpoint": "/api/v1/accounts/{id}/history",
+            "method": "GET",
+            "output_encoding": "no-op",
+            "input_headers": [
+                "Content-Type",
+                "Authorization"
+            ],
+            "backend": [
+                {
+                    "url_pattern": "/api/v1/accounts/{id}/history",
+                    "encoding": "no-op",
+                    "method": "GET",
+                    "host": [
+                        "http://accounts-api:8082"
+                    ]
+                }
+            ]
+        },
+        {
+            "endpoint": "/api/v1/transfers/",
+            "method": "POST",
+            "output_encoding": "no-op",
+            "input_headers": [
+                "Content-Type",
+                "Authorization"
+            ],
+            "backend": [
+                {
+                    "url_pattern": "/api/v1/transfers/",
+                    "encoding": "no-op",
+                    "method": "POST",
+                    "host": [
+                        "http://transactions-api:8083"
+                    ]
+                }
+            ]
+        },
+        {
+            "endpoint": "/health",
+            "method": "GET",
+            "output_encoding": "no-op",
+            "backend": [
+                {
+                    "url_pattern": "/health",
+                    "encoding": "no-op",
+                    "method": "GET",
+                    "host": [
+                        "http://identity-api:8081"
+                    ]
+                }
+            ]
+        }
+    ]
+}

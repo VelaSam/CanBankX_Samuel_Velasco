@@ -1,15 +1,18 @@
 package adapters
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"net/http"
+	"os"
+	"time"
 
-	accountsDomain "canbankx/internal/accounts/domain"
 	ledgerDomain "canbankx/internal/ledger/domain"
 	"canbankx/internal/transfers/domain"
 	"canbankx/internal/transfers/ports"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type transferRepository struct {
@@ -33,35 +36,41 @@ func (r *transferRepository) FindByIdempotencyKey(key string) (*domain.Transfer,
 }
 
 func (r *transferRepository) ExecuteTransfer(transfer *domain.Transfer, ledgerTx *ledgerDomain.Transaction, entries []ledgerDomain.LedgerEntry) error {
+	accountsURL := os.Getenv("ACCOUNTS_SERVICE_URL")
+	if accountsURL == "" {
+		accountsURL = "http://accounts-api:8082"
+	}
+
+	payload := map[string]interface{}{
+		"sourceAccount": transfer.SourceAccount,
+		"targetAccount": transfer.TargetAccount,
+		"amount":        transfer.Amount,
+	}
+	body, _ := json.Marshal(payload)
+
+	req, err := http.NewRequest("POST", accountsURL+"/internal/v1/accounts/transfer", bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errResp)
+		if errMsg, ok := errResp["error"].(string); ok {
+			return errors.New(errMsg)
+		}
+		return errors.New("failed to transfer amounts in accounts API")
+	}
+
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		var source accountsDomain.Account
-		//Lock source acc to prevent race conditions
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&source, transfer.SourceAccount).Error; err != nil {
-			return errors.New("source account not found")
-		}
-
-		var target accountsDomain.Account
-		//Lock target acc to prevent race conditions
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&target, transfer.TargetAccount).Error; err != nil {
-			return errors.New("target account not found")
-		}
-
-		//calidate if enough funds in the source acc
-		if source.Balance < transfer.Amount {
-			return errors.New("insufficient funds")
-		}
-
-		//update acc balances
-		source.Balance -= transfer.Amount
-		target.Balance += transfer.Amount
-		if err := tx.Save(&source).Error; err != nil {
-			return err
-		}
-		if err := tx.Save(&target).Error; err != nil {
-			return err
-		}
-
-		//Create Ledger
 		if err := tx.Create(ledgerTx).Error; err != nil {
 			return err
 		}
@@ -73,7 +82,6 @@ func (r *transferRepository) ExecuteTransfer(transfer *domain.Transfer, ledgerTx
 			return err
 		}
 
-		//The Transfer record is created last
 		if err := tx.Create(transfer).Error; err != nil {
 			return err
 		}

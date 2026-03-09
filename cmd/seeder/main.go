@@ -19,58 +19,63 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
+var DBIdentity *gorm.DB
+var DBAccounts *gorm.DB
+var DBTransactions *gorm.DB
 
-func initDB() {
+func initDB(dbName string, defaultPort string) *gorm.DB {
 	host := os.Getenv("DB_HOST")
 	if host == "db" || host == "" {
 		host = "127.0.0.1"
 	}
-	port := os.Getenv("DB_PORT")
-	if port == "" {
-		port = "3306"
-	}
+	port := defaultPort
 
-	dsn := os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASSWORD") + "@tcp(" + host + ":" + port + ")/" + os.Getenv("DB_NAME") + "?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASSWORD") + "@tcp(" + host + ":" + port + ")/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local"
 	if os.Getenv("DB_USER") == "" {
-		dsn = "canbankx_user:SecurePassword123!@tcp(127.0.0.1:3306)/canbankx?charset=utf8mb4&parseTime=True&loc=Local"
+		dsn = "canbankx_user:SecurePassword123!@tcp(" + host + ":" + port + ")/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local"
 	}
 
 	for i := 0; i < 15; i++ {
 		db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 		if err == nil {
-			DB = db
-			slog.Info("Successfully connected to MySQL for Seeding!")
-			return
+			slog.Info(fmt.Sprintf("Successfully connected to MySQL for %s!", dbName))
+			return db
 		}
-		slog.Warn("Failed to connect to MySQL", "error", err, "retry_in", "2s")
+		slog.Warn("Failed to connect to MySQL", "db", dbName, "error", err, "retry_in", "2s")
 		time.Sleep(2 * time.Second)
 	}
-	slog.Error("Could not connect to the database after 15 attempts.")
+	slog.Error("Could not connect to the database after 15 attempts.", "db", dbName)
 	os.Exit(1)
+	return nil
 }
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	slog.Info("Starting Data Seeder...")
+	slog.Info("Starting Data Seeder (Microservices Edition)...")
 
-	// Attempt to load .env file if it exists
 	if err := godotenv.Load(); err != nil {
 		slog.Info("No .env file found or unable to load, relying on system environment variables")
 	}
 
-	initDB()
+	DBIdentity = initDB("identity_db", "3306")
+	DBAccounts = initDB("accounts_db", "3307")
+	DBTransactions = initDB("transactions_db", "3308")
 
-	//truncate existing data to start fresh pour les load test (pas obligatoire, but good for consistent load tests)
-	DB.Exec("SET FOREIGN_KEY_CHECKS = 0;")
-	DB.Exec("TRUNCATE TABLE users;")
-	DB.Exec("TRUNCATE TABLE accounts;")
-	DB.Exec("TRUNCATE TABLE transfers;")
-	DB.Exec("TRUNCATE TABLE ledger_entries;")
-	DB.Exec("TRUNCATE TABLE transactions;")
-	DB.Exec("SET FOREIGN_KEY_CHECKS = 1;")
+	DBIdentity.Exec("SET FOREIGN_KEY_CHECKS = 0;")
+	DBIdentity.Exec("TRUNCATE TABLE users;")
+	DBIdentity.Exec("SET FOREIGN_KEY_CHECKS = 1;")
+
+	DBAccounts.Exec("SET FOREIGN_KEY_CHECKS = 0;")
+	DBAccounts.Exec("TRUNCATE TABLE accounts;")
+	DBAccounts.Exec("SET FOREIGN_KEY_CHECKS = 1;")
+
+	DBTransactions.Exec("SET FOREIGN_KEY_CHECKS = 0;")
+	DBTransactions.Exec("TRUNCATE TABLE transfers;")
+	DBTransactions.Exec("TRUNCATE TABLE ledger_entries;")
+	DBTransactions.Exec("TRUNCATE TABLE transactions;")
+	DBTransactions.Exec("SET FOREIGN_KEY_CHECKS = 1;")
 
 	numUsers := 1000
 	accountsPerUser := 2
@@ -95,7 +100,7 @@ func main() {
 		})
 	}
 
-	DB.CreateInBatches(users, 100)
+	DBIdentity.CreateInBatches(users, 100)
 
 	slog.Info("Generating accounts and initial ledger deposits...")
 
@@ -106,25 +111,26 @@ func main() {
 				accType = "SAVINGS"
 			}
 			acc := domain.Account{
-				UserID: u.ID,
-				Type:   accType,
-				Status: "ACTIVE",
+				UserID:  u.ID,
+				Type:    accType,
+				Status:  "ACTIVE",
+				Balance: initialBalance,
 			}
-			DB.Create(&acc)
+			DBAccounts.Create(&acc)
 			accountIDs = append(accountIDs, acc.ID)
 
 			tx := ledger.Transaction{
 				Reference: fmt.Sprintf("INIT-DEPOSIT-U%d-A%d", u.ID, acc.ID),
 				Type:      "DEPOSIT",
 			}
-			DB.Create(&tx)
+			DBTransactions.Create(&tx)
 
 			entry := ledger.LedgerEntry{
 				TransactionID: tx.ID,
 				AccountID:     acc.ID,
 				Amount:        initialBalance,
 			}
-			DB.Create(&entry)
+			DBTransactions.Create(&entry)
 		}
 	}
 

@@ -2,6 +2,12 @@ global:
   scrape_interval: 5s
 
 scrape_configs:
-  - job_name: 'canbankx-api'
+  - job_name: 'identity-api'
     static_configs:
-      - targets: ['api:8080']
+      - targets: ['identity-api:8081']
+  - job_name: 'accounts-api'
+    static_configs:
+      - targets: ['accounts-api:8082']
+  - job_name: 'transactions-api'
+    static_configs:
+      - targets: ['transactions-api:8083']
