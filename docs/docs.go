@@ -25,6 +25,11 @@ const docTemplate = `{
     "paths": {
         "/api/v1/accounts/": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retourne tous les comptes appartenant à l'utilisateur authentifié",
                 "produces": [
                     "application/json"
@@ -44,23 +49,25 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/canbankx_internal_pkg_errors.APIError"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/canbankx_internal_pkg_errors.APIError"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
-                },
+                }
+            },
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
-                ]
-            },
-            "post": {
+                ],
                 "description": "Crée un nouveau compte (CHECKING ou SAVINGS) pour l'utilisateur authentifié",
                 "consumes": [
                     "application/json"
@@ -79,7 +86,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/canbankx_internal_accounts_service.OpenAccountRequest"
+                            "$ref": "#/definitions/service.OpenAccountRequest"
                         }
                     }
                 ],
@@ -112,16 +119,16 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     }
-                },
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/v1/accounts/{id}/history": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Récupère le solde calculé via le Ledger et les transactions récentes",
                 "produces": [
                     "application/json"
@@ -175,12 +182,7 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     }
-                },
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/v1/identity/login": {
@@ -203,7 +205,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/canbankx_internal_identity_service.LoginRequest"
+                            "$ref": "#/definitions/service.LoginRequest"
                         }
                     }
                 ],
@@ -218,13 +220,15 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/canbankx_internal_pkg_errors.APIError"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/canbankx_internal_pkg_errors.APIError"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -250,7 +254,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/canbankx_internal_identity_service.VerifyMFARequest"
+                            "$ref": "#/definitions/service.VerifyMFARequest"
                         }
                     }
                 ],
@@ -265,13 +269,15 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/canbankx_internal_pkg_errors.APIError"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/canbankx_internal_pkg_errors.APIError"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -297,7 +303,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/canbankx_internal_identity_service.RegisterRequest"
+                            "$ref": "#/definitions/service.RegisterRequest"
                         }
                     }
                 ],
@@ -328,6 +334,11 @@ const docTemplate = `{
         },
         "/api/v1/transfers/": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Transfère des fonds d'un compte source à un compte cible avec garantie Exactly-Once",
                 "consumes": [
                     "application/json"
@@ -346,7 +357,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/canbankx_internal_transfers_service.ProcessTransferRequest"
+                            "$ref": "#/definitions/service.ProcessTransferRequest"
                         }
                     }
                 ],
@@ -379,32 +390,12 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     }
-                },
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ]
+                }
             }
         }
     },
     "definitions": {
-        "canbankx_internal_accounts_service.OpenAccountRequest": {
-            "type": "object",
-            "required": [
-                "type"
-            ],
-            "properties": {
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "CHECKING",
-                        "SAVINGS"
-                    ]
-                }
-            }
-        },
-        "canbankx_internal_identity_service.LoginRequest": {
+        "service.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -419,7 +410,45 @@ const docTemplate = `{
                 }
             }
         },
-        "canbankx_internal_identity_service.RegisterRequest": {
+        "service.OpenAccountRequest": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "CHECKING",
+                        "SAVINGS"
+                    ]
+                }
+            }
+        },
+        "service.ProcessTransferRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "idempotencyKey",
+                "sourceAccount",
+                "targetAccount"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "idempotencyKey": {
+                    "type": "string"
+                },
+                "sourceAccount": {
+                    "type": "integer"
+                },
+                "targetAccount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -447,7 +476,7 @@ const docTemplate = `{
                 }
             }
         },
-        "canbankx_internal_identity_service.VerifyMFARequest": {
+        "service.VerifyMFARequest": {
             "type": "object",
             "required": [
                 "code",
@@ -459,46 +488,6 @@ const docTemplate = `{
                 },
                 "mfaToken": {
                     "type": "string"
-                }
-            }
-        },
-        "canbankx_internal_pkg_errors.APIError": {
-            "type": "object",
-            "properties": {
-                "details": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "error_code": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "canbankx_internal_transfers_service.ProcessTransferRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "idempotencyKey",
-                "sourceAccount",
-                "targetAccount"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "idempotencyKey": {
-                    "type": "string"
-                },
-                "sourceAccount": {
-                    "type": "integer"
-                },
-                "targetAccount": {
-                    "type": "integer"
                 }
             }
         }
@@ -515,7 +504,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "CanBankX API",

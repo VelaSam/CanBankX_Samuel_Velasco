@@ -73,8 +73,8 @@ func (h *IdentityHandler) RegisterUser(c *gin.Context) {
 // @Produce json
 // @Param request body service.LoginRequest true "Login Request"
 // @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} apierrors.APIError
-// @Failure 401 {object} apierrors.APIError
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Router /api/v1/identity/login [post]
 func (h *IdentityHandler) Login(c *gin.Context) {
 	var req service.LoginRequest
@@ -108,8 +108,8 @@ func (h *IdentityHandler) Login(c *gin.Context) {
 // @Produce json
 // @Param request body service.VerifyMFARequest true "MFA Verify Request"
 // @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} apierrors.APIError
-// @Failure 401 {object} apierrors.APIError
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Router /api/v1/identity/login/mfa [post]
 func (h *IdentityHandler) VerifyMFA(c *gin.Context) {
 	var req service.VerifyMFARequest

@@ -80,8 +80,8 @@ func (h *AccountHandler) OpenAccount(c *gin.Context) {
 // @Security BearerAuth
 // @Produce json
 // @Success 200 {object} map[string]interface{}
-// @Failure 401 {object} apierrors.APIError
-// @Failure 500 {object} apierrors.APIError
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
 // @Router /api/v1/accounts/ [get]
 func (h *AccountHandler) GetAccounts(c *gin.Context) {
 	userID, exists := c.Get("userID")
