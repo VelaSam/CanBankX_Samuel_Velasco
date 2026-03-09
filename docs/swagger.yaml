@@ -1,16 +1,6 @@
 basePath: /
 definitions:
-  canbankx_internal_accounts_service.OpenAccountRequest:
-    properties:
-      type:
-        enum:
-        - CHECKING
-        - SAVINGS
-        type: string
-    required:
-    - type
-    type: object
-  canbankx_internal_identity_service.LoginRequest:
+  service.LoginRequest:
     properties:
       email:
         type: string
@@ -20,7 +10,33 @@ definitions:
     - email
     - password
     type: object
-  canbankx_internal_identity_service.RegisterRequest:
+  service.OpenAccountRequest:
+    properties:
+      type:
+        enum:
+        - CHECKING
+        - SAVINGS
+        type: string
+    required:
+    - type
+    type: object
+  service.ProcessTransferRequest:
+    properties:
+      amount:
+        type: number
+      idempotencyKey:
+        type: string
+      sourceAccount:
+        type: integer
+      targetAccount:
+        type: integer
+    required:
+    - amount
+    - idempotencyKey
+    - sourceAccount
+    - targetAccount
+    type: object
+  service.RegisterRequest:
     properties:
       email:
         type: string
@@ -40,7 +56,7 @@ definitions:
     - password
     - sin
     type: object
-  canbankx_internal_identity_service.VerifyMFARequest:
+  service.VerifyMFARequest:
     properties:
       code:
         type: string
@@ -50,34 +66,6 @@ definitions:
     - code
     - mfaToken
     type: object
-  canbankx_internal_pkg_errors.APIError:
-    properties:
-      details:
-        items:
-          type: string
-        type: array
-      error_code:
-        type: string
-      message:
-        type: string
-    type: object
-  canbankx_internal_transfers_service.ProcessTransferRequest:
-    properties:
-      amount:
-        type: number
-      idempotencyKey:
-        type: string
-      sourceAccount:
-        type: integer
-      targetAccount:
-        type: integer
-    required:
-    - amount
-    - idempotencyKey
-    - sourceAccount
-    - targetAccount
-    type: object
-host: localhost:8080
 info:
   contact:
     email: support@canbankx.com
@@ -104,11 +92,13 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+            additionalProperties: true
+            type: object
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
       summary: Lister les comptes
@@ -125,7 +115,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/canbankx_internal_accounts_service.OpenAccountRequest'
+          $ref: '#/definitions/service.OpenAccountRequest'
       produces:
       - application/json
       responses:
@@ -207,7 +197,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/canbankx_internal_identity_service.LoginRequest'
+          $ref: '#/definitions/service.LoginRequest'
       produces:
       - application/json
       responses:
@@ -219,11 +209,13 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+            additionalProperties: true
+            type: object
       summary: S'authentifier (Étape 1)
       tags:
       - Identity
@@ -238,7 +230,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/canbankx_internal_identity_service.VerifyMFARequest'
+          $ref: '#/definitions/service.VerifyMFARequest'
       produces:
       - application/json
       responses:
@@ -250,11 +242,13 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/canbankx_internal_pkg_errors.APIError'
+            additionalProperties: true
+            type: object
       summary: Vérifier le code MFA (Étape 2)
       tags:
       - Identity
@@ -269,7 +263,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/canbankx_internal_identity_service.RegisterRequest'
+          $ref: '#/definitions/service.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -303,7 +297,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/canbankx_internal_transfers_service.ProcessTransferRequest'
+          $ref: '#/definitions/service.ProcessTransferRequest'
       produces:
       - application/json
       responses:
