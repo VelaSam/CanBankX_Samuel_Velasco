@@ -1,6 +1,6 @@
 # CanBankX
 
-CanBankX (sur cette branche) est une API REST développée en Go en Monolithe Modulaire. Son architecture est hautement résiliente (via le lock ACID des tables) et traçable (via un système de comptabilité / *Ledger* en *append-only*).
+CanBankX (sur cette branche) est la version **Monolithe Optimisé (Phase 2)**. Son architecture a évolué par rapport au monolithe de base ; elle déploie 3 instances parallèles derrière un **Load Balancer Nginx** et utilise **Redis** pour mettre en cache les requêtes de consultation massives, tout en conservant son modèle de données transactionnel et traçable (*Ledger*).
 
 ## Quickstart
 
@@ -10,12 +10,13 @@ CanBankX (sur cette branche) est une API REST développée en Go en Monolithe Mo
 - *(Facultatif : `Go 1.26+` si vous souhaitez développer ou compiler nativement).*
 
 ### 1. Cloner le Projet
-Ce README est uniquement présent sur la branche `canbankx_phase1_monolithique`, il sera modifié pour les autres version
-Clonez ce repo et aller sur la branche de la phase 1 :
+Ce README est uniquement présent sur la branche `canbankx_phase2_redis_lb`.
+Clonez ce repo et placez-vous sur la branche de la phase 2 :
+
 ```bash
 git clone https://github.com/VelaSam/CanBankX_Samuel_Velasco CanBankX
 cd CanBankX
-git checkout canbankx_phase1_monolithique
+git checkout canbankx_phase2_redis_lb
 ```
 
 ### 2. Configuration (Fichier `.env`)
@@ -36,11 +37,11 @@ Ouvrez le fichier `.env` nouvellement créé et modifiez les valeurs selon votre
 - **`GIN_MODE`** : Utilisez la valeur `debug` si vous testez localement pour voir les logs, ou `release` sur la vm
 
 ### 3. Démarrage de l'Application Bancaire
-Toute l'infrastructure démarre instantanément avec Docker :
+Toute l'infrastructure (APIx3, MySQL, Redis, Nginx, Prometheus, Grafana) démarre via :
 ```bash
 docker compose up -d --build
 ```
-L'API devrait maintenant être en ligne sur : `http://localhost:8080/health`.
+L'API devrait maintenant être en ligne (distribuée par Nginx) sur le point d'accès unique : `http://localhost:8080/health`.
 La documentation OpenAPI (Swagger) est publiquement accessible sur : `http://localhost:8080/swagger/index.html`.
 
 ### 4. Peupler la base de données (Data Seeder)

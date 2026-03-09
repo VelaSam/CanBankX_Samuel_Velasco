@@ -9,8 +9,8 @@ https://github.com/NetworkedAssets/arc42-in-markdown-template/blob/master/2.%20S
 Le projet **CanBankX** vise à concevoir une plateforme bancaire commerciale canadienne numérique et sécurisée. Le système permet la gestion de comptes chèques et épargne, l'exécution de paiements et transferts, la consultation de soldes, ainsi qu'une conformité stricte (AML, KYC) et des clôtures journalières (EOD). 
 
 Le projet est divisé en phases évolutives :
-1. Baseline Monolithe Modulaire.
-2. Optimisation via Caching (Redis) & Load Balancing.
+1. Baseline Monolithe Modulaire (Archivé).
+2. Optimisation via Caching (Redis) & Load Balancing **(Version Courante sur main)**.
 3. Architecture Microservices orchestrée via une API Gateway.
 
 ### 1.2 Quality Goals
@@ -47,7 +47,7 @@ Le projet est divisé en phases évolutives :
 ---
 
 ## 4. Solution Strategy
-L'approche initiale repose sur un **Monolithe Modulaire** écrit en Go, organisé autour de la clean architecture. Cette décision (ADR-0001) permet de bâtir une fondation saine et un *baseline* clair pour les tests de performance. Par la suite, ce monolithe sera divisé en micro-services (ADR-0001, phase 3). Les écritures critiques seront assurées par des mécanismes idempotents en base de données relationnelle (ADR-0002).
+L'approche initiale reposait sur un **Monolithe Modulaire** écrit en Go. Cette décision (ADR-0001) a permis de bâtir une fondation saine. Actuellement, ce monolithe a été optimisé par du Load-Balancing (Nginx) et de la mise en cache rapide avec Redis (Phase 2). Par la suite, ce système sera divisé en micro-services (ADR-0001, phase 3). Les écritures critiques sont assurées par des mécanismes idempotents en base de données relationnelle (ADR-0002).
 
 ---
 
@@ -87,8 +87,8 @@ Consolidées dans les ADRs dédiés :
 ---
 
 ## 10. Risques et Dettes Techniques
-- **Technical Debt Intentionnelle (Phase 1):** Manque de haute disponibilité immédiate (SPOF - Single Point of Failure) dans la phase monolithique. Sera résolu en Phase 2 via Nginx et réplicas.
-- **Risque de Charge Base de données:** Verrouillage transactionnel pénalisant la scalabilité des comptes très actifs. À surveiller avec les tests k6.
+- **Technical Debt Intentionnelle (Résilue en Phase 2):** Le manque de haute disponibilité immédiate du Monolithe de base a été corrigé grâce à l'implémentation d'un Load Balancer Nginx et de Redis pour le trafic en lecture.
+- **Risque de Charge Base de données:** Verrouillage transactionnel restrictif lors des phases d'écriture massives. Les tests k6 continueront d'approuver ou d'invalider cette solution.
 
 ---
 

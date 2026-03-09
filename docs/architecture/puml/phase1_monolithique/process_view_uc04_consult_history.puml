@@ -1,41 +1,56 @@
 @startuml process_view_uc04_consult_history_phase1_monolithique
-title UC-04: Consult Balance and History (Phase 1 Monolithique)
+title UC-04: Consult Balance and History (Phase 2 Monolithe Optimisé)
 autonumber
 
 actor Client
+participant "Nginx LB" as LB
 participant "API Router" as Router
 participant "Auth Middleware" as Middleware
 participant "Accounts Handler" as Handler
+database "Redis Cache" as Redis
 participant "Accounts Service" as Accounts
 participant "Ledger Service" as Ledger
 database "MySQL" as DB
 
-Client -> Router: GET /api/v1/accounts/:id/history (Bearer Token)
+Client -> LB: GET /api/v1/accounts/:id/history (Bearer Token)
+LB -> Router: Proxy Pass (Round-Robin)
 Router -> Middleware: intercept
 Middleware -> Middleware: Validate JWT & Extract UserID
 Middleware --> Router: Context updated
 
 Router -> Handler: Forward Request
 activate Handler
-Handler -> Accounts: GetAccountHistory(userID, accountID)
-activate Accounts
-Accounts -> DB: SELECT * FROM accounts WHERE id=?
-DB --> Accounts: Account Model
-Accounts -> Accounts: Verify ownership (UserID == account.UserID)
 
-Accounts -> Ledger: GetAccountHistory(accountID)
-activate Ledger
-Ledger -> DB: SELECT * FROM ledger_entries WHERE account_id=?
-DB --> Ledger: List of entries (Credits & Debits)
-Ledger -> DB: SELECT SUM(amount) FROM ledger_entries WHERE account_id=?
-DB --> Ledger: Computed live balance
-Ledger --> Accounts: Entries & Balance Data
-deactivate Ledger
+Handler -> Redis: GET account:{id}:history
+Redis --> Handler: Cache Hit (Returns JSON)
+note right of Handler: Si Cache Hit: Retour immédiat!\nAucun appel n'est fait à la base de données.
 
-Accounts --> Handler: History Response (entries, balance)
-deactivate Accounts
+alt Cache Miss
+    Handler -> Accounts: GetAccountHistory(userID, accountID)
+    activate Accounts
+    Accounts -> DB: SELECT * FROM accounts WHERE id=?
+    DB --> Accounts: Account Model
+    Accounts -> Accounts: Verify ownership (UserID == account.UserID)
 
-Handler --> Client: 200 OK
+    Accounts -> Ledger: GetAccountHistory(accountID)
+    activate Ledger
+    Ledger -> DB: SELECT * FROM ledger_entries WHERE account_id=?
+    DB --> Ledger: List of entries (Credits & Debits)
+    Ledger -> DB: SELECT SUM(amount) FROM ledger_entries WHERE account_id=?
+    DB --> Ledger: Computed live balance
+    Ledger --> Accounts: Entries & Balance Data
+    deactivate Ledger
+
+    Accounts --> Handler: History Response Data
+    deactivate Accounts
+
+    Handler -> Redis: SET account:{id}:history (JSON, TTL=5min)
+end
+
+Handler --> Router: 200 OK
 deactivate Handler
+
+Router --> LB: Response
+LB --> Client: 200 OK
 
 @enduml

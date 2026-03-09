@@ -1,15 +1,18 @@
 @startuml process_view_uc05_transfer_phase1_monolithique
-title UC-05: Internal Transfer (Phase 1 Monolithique)
+title UC-05: Internal Transfer (Phase 2 Monolithe Optimisé)
 autonumber
 
 actor Client
+participant "Nginx LB" as LB
 participant "API Router" as Router
 participant "Auth Middleware" as Middleware
 participant "Transfers Handler" as Handler
 participant "Transfers Service" as Transfers
+database "Redis Cache" as Redis
 database "MySQL" as DB
 
-Client -> Router: POST /api/v1/transfers (Bearer Token, Idempotency-Key)
+Client -> LB: POST /api/v1/transfers (Bearer Token, Idempotency-Key)
+LB -> Router: Proxy Pass (Round-Robin)
 Router -> Middleware: intercept
 Middleware -> Middleware: Validate JWT & Extract UserID
 Middleware --> Router: Context updated
@@ -36,10 +39,16 @@ Transfers -> DB: INSERT INTO transfers
 Transfers -> DB: COMMIT Transaction
 deactivate DB
 
+Transfers -> Redis: DEL account:{source}:history, account:{target}:history
+note right of Transfers: Invalidation du cache (Write-Through) pour garantir l'intégrité
+
 Transfers --> Handler: Success (Transfer details)
 deactivate Transfers
 
-Handler --> Client: 201 Created
+Handler --> Router: 201 Created
 deactivate Handler
+
+Router --> LB: Response
+LB --> Client: 201 Created
 
 @enduml

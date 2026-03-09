@@ -5,11 +5,11 @@ Le modèle 4+1 décrit l'architecture selon cinq perspectives distinctes pour r�
 ---
 
 ## 1. Vue Logique (Logical View)
-La solution repose sur un **Monolithe Modulaire** partitionné par métier.
+La solution repose toujours sur un **Monolithe Modulaire** partitionné par métier, mais dorénavant optimisé par l'ajout d'une couche intermédiaire de mise en cache pour alléger la base de données.
 
 ![Logical View Diagram Phase 1](puml/phase1_monolithique/logical_view_phase1_monolithique.png)
 - **Module Identity :** `User`, `Role`, `Session`, `KYCDocument`.
-- **Module Accounts :** `Account`, `AccountBalance`.
+- **Module Accounts :** `Account`, `AccountBalance`. Lit et écrit au travers de **Redis** pour l'historique et les soldes afin de gérer les charges massives.
 - **Module Transfers :** `Transfer`, `Payee`.
 - **Module Ledger :** `LedgerEntry`, `Transaction`.
 
@@ -30,8 +30,9 @@ L'application a été découpée en 5 scénarios critiques (Cas d'utilisation), 
 ### UC-03 : Ouverture de compte (Accounts)
 ![Process View UC03](puml/phase1_monolithique/process_view_uc03_open_account.png)
 
-### UC-04 : Consultation du solde et historique (Ledger)
+### UC-04 : Consultation du solde et historique (Ledger) avec Cache
 ![Process View UC04](puml/phase1_monolithique/process_view_uc04_consult_history.png)
+*Cette consultation sollicite d'abord Redis pour une réponse quasi-instantanée, permettant d'épargner de lourds `SELECT` à MySQL.*
 
 ### UC-05 : Virement de fonds (Transfers)
 ![Process View UC05](puml/phase1_monolithique/process_view_uc05_transfer.png)
@@ -55,21 +56,21 @@ L'application a été découpée en 5 scénarios critiques (Cas d'utilisation), 
 ## 4. Vue Déploiement (Physical/Deployment View)
 *Dédiée aux administrateurs systèmes et ingénieurs DevOps (Phase 1 Baseline).*
 
-**Actuellement (Phase 1) :**
+**Archive (Phase 1 - Monolithe de base) :**
 
 ![Deployment View Diagram Phase 1](puml/phase1_monolithique/deployment_view_phase1_monolithique.png)
 - Node 1: Serveur applicatif exécutant le binaire Go (Monolithe).
 - Node 2: Base de données MySQL.
 
-**Évolution prévue (Phase 2) :**
+**Actuellement (Phase 2 - Monolithe Optimisé) :**
 
 ![Deployment View Diagram Phase 2](puml/phase2_load_balancing/deployment_view_phase2_redis_LB.png)
-- **Load Balancer :** Nginx exposant l'application.
-- **App Nodes :** Instances de conteneurs Docker exécutant l'application Go.
-- **Cache Node :** Redis pour la mise en cache.
+- **Load Balancer :** Nginx exposant l'application en limitant l'accès direct.
+- **App Nodes :** 3 instances (replicas) de conteneurs Docker exécutant l'application Go pour gérer le trafic.
+- **Cache Node :** Redis assurant la mise en cache (Read-Through) et l'invalidation synchronisée des historiques de comptes.
 - **Monitoring :** Prometheus / Grafana scrutant le `/metrics` des instances.
 
-**Évolution prévue (Phase 3) :**
+**Évolution prévue (Phase 3 - Microservices) :**
 
 ![Deployment View Diagram Phase 3](puml/phase3_microservices/deployment_view_phase3_microservices.png)
 - **API Gateway :** KrakenD routant les demandes.
