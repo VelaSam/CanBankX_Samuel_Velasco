@@ -4,10 +4,10 @@ definitions:
     properties:
       email:
         type: string
-        example: "alice@test.com"
+        example: user1@test.com
       password:
         type: string
-        example: "Password123!"
+        example: Password123!
     required:
     - email
     - password
@@ -19,7 +19,7 @@ definitions:
         - CHECKING
         - SAVINGS
         type: string
-        example: "CHECKING"
+        example: SAVINGS
     required:
     - type
     type: object
@@ -27,16 +27,16 @@ definitions:
     properties:
       amount:
         type: number
-        example: 50.0
+        example: 125.50
       idempotencyKey:
         type: string
-        example: "tx-req-001"
+        example: a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d
       sourceAccount:
         type: integer
         example: 1
       targetAccount:
         type: integer
-        example: 2
+        example: 3
     required:
     - amount
     - idempotencyKey
@@ -47,20 +47,20 @@ definitions:
     properties:
       email:
         type: string
-        example: "alice@test.com"
+        example: new.user@test.com
       firstName:
         type: string
-        example: "Alice"
+        example: Jean
       lastName:
         type: string
-        example: "Smith"
+        example: Tremblay
       password:
         minLength: 8
         type: string
-        example: "Password123!"
+        example: SecurePassword123!
       sin:
         type: string
-        example: "987654321"
+        example: "123456789"
     required:
     - email
     - firstName
@@ -72,10 +72,10 @@ definitions:
     properties:
       code:
         type: string
-        example: "123456"
+        example: "111111"
       mfaToken:
         type: string
-        example: "{{mfaToken}}"
+        example: "xxxx.yyyy.zzzz"
     required:
     - code
     - mfaToken
@@ -89,8 +89,8 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: CanBankX API
-  version: "1.0"
+  title: CanBankX API (Microservices Edition)
+  version: "3.0"
 paths:
   /api/v1/accounts/:
     get:

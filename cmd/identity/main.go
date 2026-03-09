@@ -63,6 +63,22 @@ func initDB() {
 	os.Exit(1)
 }
 
+// @title CanBankX API (Microservices Edition)
+// @version 3.0
+// @description API de la plateforme bancaire CanBankX
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@canbankx.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)

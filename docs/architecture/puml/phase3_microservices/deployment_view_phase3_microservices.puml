@@ -1,4 +1,4 @@
-@startuml
+@startuml deployment_view_phase3
 skinparam componentStyle uml2
 
 actor "Clients\n(Web/Mobile)" as Client
@@ -13,6 +13,7 @@ node "Microservices (Go)" {
 database "Identity DB" as DB_Id
 database "Accounts DB" as DB_Acc
 database "Transactions DB" as DB_Tx
+database "Redis" as Redis
 
 node "Observability Stack" {
   component "Prometheus" as Prom
@@ -27,6 +28,12 @@ Gateway --> Transactions : REST / Internal Route
 Identity --> DB_Id
 Accounts --> DB_Acc
 Transactions --> DB_Tx
+
+Accounts .> Redis : Caching
+Transactions .> Redis : Caching
+
+Transactions --> Accounts : POST /internal/v1/accounts/transfer
+Accounts --> Transactions : GET /internal/v1/ledger/:id
 
 Identity -.-> Prom
 Accounts -.-> Prom

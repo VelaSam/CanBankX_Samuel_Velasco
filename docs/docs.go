@@ -503,11 +503,11 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
+	Version:          "3.0",
 	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "CanBankX API",
+	Title:            "CanBankX API (Microservices Edition)",
 	Description:      "API de la plateforme bancaire CanBankX",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

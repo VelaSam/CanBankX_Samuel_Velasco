@@ -14,8 +14,9 @@ Le cahier des charges bancaires stipule que :
 ### Decision
 **MySQL** a été choisi comme SGBD relationnel principal.
 1. **Idempotency Key :** Toute requête modifiant l'état (Paiement, Transfert) nécessitera une `Idempotency-Key` dans les *headers* HTTP de la requête cliente. Cette clé sera stockée dans une table SQL dédiée aux requêtes idempotentes. Si une clé a déjà été traitée, le système retournera le résultat mis en cache de la requête précédente sans re-traiter la procédure.
-2. **Transactions ACID :** Chaque modification (ex: réduire le solde A, augmenter le solde B, ajouter les logs comptables) se fera obligatoirement à l'intérieur d'une seule et même transaction de base de données (BEGIN ... COMMIT). 
+2. **Transactions ACID Distribuées :** Puisque le système a évolué vers l'architecture de Microservices (Phase 3), l'isolation ACID d'origine a été complexifiée. Désormais, le service `Transactions` orchestre des appels réseaux vers `Accounts` qui lui possède la responsabilité de verrouiller de façon ACID ses propres enregistrements (les soldes des comptes).
 3. **Journalisation Append-Only :** La table `ledger_entries` ne permettra aucune mise à jour (`UPDATE`) ou suppression (`DELETE`), uniquement des insertions (`INSERT`), garantissant de ce fait un historique financier parfaitement auditable.
+4. **Modèle de Données Décentralisé :** Le monolithe MySQL a été scindé en 3 conteneurs distincts (Identity DB, Accounts DB, Transactions DB) pour forcer le patron de conception "Database-per-Service". Ce modèle supprime les dépendances directes aux tables étrangères par les différents domaines, s'en remettant à des UUIDs et à une communication via API Rest.
 
 ### Consequences
 **Positives :**

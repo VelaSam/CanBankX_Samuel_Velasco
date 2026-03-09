@@ -1,87 +1,73 @@
-# CanBankX
+# CanBankX - Architecture Microservices (Phase 3 Finale)
 
-CanBankX (sur cette branche) est la version **Monolithe Optimisé (Phase 2)**. Son architecture a évolué par rapport au monolithe de base ; elle déploie 3 instances parallèles derrière un **Load Balancer Nginx** et utilise **Redis** pour mettre en cache les requêtes de consultation massives, tout en conservant son modèle de données transactionnel et traçable (*Ledger*).
+Salut ! Bienvenue sur le dépôt de CanBankX. Honnêtement, c'est le plus gros projet que j'ai fait à date à l'ÉTS ! Petite anecdote : au début du lab, je pensais qu'il fallait *uniquement* faire la version microservices (donc sauter direct à la phase 3 en ignorant les phases 1 et 2). J'avais presque tout fini quand je me suis rendu compte de mon erreur et j'ai dû recommencer le projet à zéro... Mais bon, au final, c'était un mal pour un bien ! Vu que j'avais déjà construit l'architecture complexe, refaire la version monolithique de base pour ensuite l'upgrader vers cette version microservices finale, c'était un vrai piece of cake!
 
-## Quickstart
+Cette branche contient l'aboutissement du projet : une **Architecture Microservices Répartie** complète, avec 3 APIs indépendantes en Go, 3 bases de données MySQL isolées (patron *Database-per-Microservice*), un cache Redis distribué et le Gateway KrakenD pour orchestrer.
+---
+
+## 🚀 Quickstart
 
 ### Prérequis
 - `git`
-- `docker` et `docker-compose` d'installés localement (sur l'hôte ou une Machine Virtuelle).
-- *(Facultatif : `Go 1.26+` si vous souhaitez développer ou compiler nativement).*
+- `docker` et `docker compose` installés localement ou sur votre VM.
+- `Go 1.22+` installé sur votre machine hôte (nécessaire **uniquement** pour exécuter le script de génération de seed de la base de données).
 
 ### 1. Cloner le Projet
-Ce README est uniquement présent sur la branche `canbankx_phase2_redis_lb`.
-Clonez ce repo et placez-vous sur la branche de la phase 2 :
+Assurez-vous d'être sur la branche contenant la version finale.
 
 ```bash
 git clone https://github.com/VelaSam/CanBankX_Samuel_Velasco CanBankX
 cd CanBankX
-git checkout canbankx_phase2_redis_lb
 ```
 
-### 2. Configuration (Fichier `.env`)
-Le projet utilise Docker, mais ses containers ont besoin de valeurs spécifiques pour l'API et la bd. Un squelette vide est fourni, qu'il faut peupler :
+### 2. Démarrage de l'Infrastructure (Docker Compose)
+Toute l'infrastructure (les 3 APIs Go, les 3 BDs MySQL, Redis, KrakenD, Prometheus et Grafana) est entièrement conteneurisée.
+Aucun fichier `.env` n'est requis pour le lancement de base ; le fichier `docker-compose.yml` injecte les variable par défaut.
 
-**Sur Linux/Mac/WSL :**
-```bash
-cp .env-example .env
-```
-_Sur Windows (shame) : 
-```bash
-Copy-Item .env-example .env
-```
-
-Ouvrez le fichier `.env` nouvellement créé et modifiez les valeurs selon votre environnement :
-- **`DB_USER`** et **`DB_PASSWORD`** : Les accès qui seront automatiquement configurés pour l'image MySQL `mysql:8.0`. Changez le mot de passe pour plus de sécurité.
-- **`JWT_SECRET`** : Clé secrète de cryptographie servant à signer et valider de façon intègre les jetons. Il est crucial en prod de mettre une chaîne longue et aléatoire.
-- **`GIN_MODE`** : Utilisez la valeur `debug` si vous testez localement pour voir les logs, ou `release` sur la vm
-
-### 3. Démarrage de l'Application Bancaire
-Toute l'infrastructure (APIx3, MySQL, Redis, Nginx, Prometheus, Grafana) démarre via :
+Exécutez la commande suivante à la racine du projet :
 ```bash
 docker compose up -d --build
 ```
-L'API devrait maintenant être en ligne (distribuée par Nginx) sur le point d'accès unique : `http://localhost:8080/health`.
-La documentation OpenAPI (Swagger) est publiquement accessible sur : `http://localhost:8080/swagger/index.html`.
+### 3. Peupler les Bases de Données (Data Seeder)
+Pour que l'API Gateway et les tests de charge fonctionnent, il faut d'abord injecter des données dans les 3 bases de données isolées. J'ai conçu un script Go qui s'occupe de tout : création de 1000 utilisateurs, ouverture de leurs comptes, et dépôt initial de 10 000$ en exploitant la logique distribuée.
 
-### 4. Peupler la base de données (Data Seeder)
-Afin de pouvoir simuler une utilisation réaliste lors des tests de charge, il faut générer un grand volume d'utilisateurs et de comptes dans la base de données.
-Une fois les conteneurs démarrés, exécutez le script ci-dessous (nécessite Go installé localement) :
-
-Par défaut, le script lit les informations de connexion directement depuis votre fichier `.env`. Si votre `.env` est bien configuré (voir l'étape 2), exécutez simplement :
-
+Exécutez la commande suivante depuis votre terminal hôte (à la racine du projet) :
 ```bash
 go run cmd/seeder/main.go
 ```
+*Note : Le script exportera automatiquement les identifiants de comptes requis par k6 vers le fichier `tests/k6/users.json`.*
 
-Ce script exportera les identifiants de comptes dans le fichier `tests/k6/users.json`, qui sera lu par k6 pour créer des transferts aléatoires.
+### 4. Tests et Validation de l'API Gateway (KrakenD)
 
-## Tests Unitaires et Fonctionnels (Postman)
-Une collection complète est mise à disposition pour valider les 5 CU architecturaux.
-Fichier à importer dans Postman : `docs/architecture/postman/postman-collection.json`
+L'API Gateway KrakenD est maintenant le point d'entrée unique et sécurisé de tout le système sur le port `8080`. Les microservices internes (`8081`, `8082`, `8083`) ne sont plus exposer directement aux clients.
 
-## Tests de Charge (k6) et Observabilité (Grafana)
+Vous pouvez tester le bon acheminement du système en appelant son point de terminaison de santé public :
+```bash
+curl http://localhost:8080/health
+```
+Si ça retourne "UP", la gateway effectue le routage correctement vers les APIs !
 
-- **Data Time-Series (Prometheus)** : `http://localhost:9090`
-- **Dashboards Dynamiques (Grafana)**: `http://localhost:3000` *(Login : `admin` / Password : `admin`)*. Connectez Prometheus dans le panneau *Data Sources* avec l'URL interne de Docker `http://prometheus:9090`.
+#### Validation détaillée via Postman :
+Puisque le système est maintenant composé de multiples microservices. Vous pouvez importer la collection Postman mise à jour :
+- **Fichier à importer dans Postman** : `docs/architecture/postman/postman-collection.json`
+- Cette collection inclut des tests pour reproduire l'entièreté d'un parcours client : Inscription, Login, MFA, Création de compte et les virements ACID inter-services.
 
-### Scénarios de tests disponibles
-Le dossier `tests/k6` comprend 4 paliers d'évaluation de l'architecture :
-1. `1_easy.js` : Modéré (50 Users). Devrait toujours réussir.
-2. `2_medium.js` : Difficile (300 Users). Conçu pour stresser la phase monolithique et passer la Phase Redis+LB.
-3. `3_hard.js` : Extrême (1000 Users) et difficile. Conçu pour stresser la phase Redis+LB et passer la Phase Microservices.
-4. `4_massive_stress.js` : Crash Test Ultime.
+### 5. Tests de Charge Extrêmes (k6)
+L'architecture microservicesa été conçue pour supporter une charge répartie élevée. 
 
-### Lancer la simulation (sans installation logicielle locale)
-Assurez-vous que l'API est fonctionnelle (`docker compose up`) et que la BD a été peuplée via l'étape 4. Nous utiliserons le conteneur k6 officiel en créant un volume pour lui donner accès au fichier `users.json` :
+Pour lancer la simulation de stress test (il y a 4 fichiers de stress test) via k6, exécutez le conteneur k6 officiel. Ce dernier lira vos différents scripts et le pool d'utilisateurs que le `seeder` a généré :
+
+**Sur Linux / Mac / VM :**
+```bash
+docker run --rm -i -v $(pwd)/tests/k6:/scripts --network canbankx_canbankx-net grafana/k6 run -e API_URL=http://krakend:8080 /scripts/3_hard.js
+```
 
 **Sur Windows (PowerShell) :**
 ```powershell
-docker run --rm -i -v ${PWD}/tests/k6:/scripts --network canbankx_canbankx-net grafana/k6 run -e API_URL=http://api:8080 /scripts/1_easy.js
+docker run --rm -i -v ${PWD}/tests/k6:/scripts --network canbankx_canbankx-net grafana/k6 run -e API_URL=http://krakend:8080 /scripts/3_hard.js
 ```
 
-**Sur Linux / Mac / Serveur VM :**
-```bash
-docker run --rm -i -v $(pwd)/tests/k6:/scripts --network canbankx_canbankx-net grafana/k6 run -e API_URL=http://api:8080 /scripts/1_easy.js
-```
-*(Remplacez `1_easy.js` par un des scénarios listés ci-haut).*
+### 6. Observabilité (Monitoring)
+Les métriques Golden Signals de la passerelle et de chaque microservice peuvent être consultées :
+- **Prometheus** : `http://localhost:9090`
+- **Grafana** : `http://localhost:3000` *(Login : `admin` / Password : `admin`)*. Dans Grafana, connectez Prometheus dans le panneau *Data Sources* en ciblant l'URL interne Docker `http://prometheus:9090`.

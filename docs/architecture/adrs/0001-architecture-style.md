@@ -15,13 +15,14 @@ Dans ce modèle :
 2. Il n'y a qu'un **seul et unique point d'entrée (`main.go`)** hébergeant toutes les API REST.
 3. Toutes les interactions entre les domaines se font via des appels de fonctions ordinaires (interfaces Go) en mémoire, et non via le réseau.
 
-Le système sera ensuite transformé par étapes :
-- Étape 2 : Ajout de Load Balancing horizontal (Nginx) et de Caching (Redis) au monolithe.
-- Étape 3 : Découpage physique en vrais microservices orchestrés via API Gateway (Kong).
+Le système a ensuite été transformé par étapes :
+- Étape 2 (Archivée) : Ajout de Load Balancing horizontal (Nginx) et de Caching (Redis) au monolithe.
+- Étape 3 (Actuelle) : Découpage physique en vrais microservices orchestrés via API Gateway (KrakenD). La décision de passer à KrakenD au lieu de Kong a été prise pour sa légèreté et sa configuration purement déclarative.
 
 ### Consequences
 **Positives** :
 - Facilité d'établir une "ligne de base" (baseline) pour les tests de latence et de débit (P95, etc.).
 
 **Négatives** :
-- Risque de couplage fort si les règles de découpage (Modular Monolith) ne sont pas respectées.
+- Risque de couplage fort si les règles de découpage (Modular Monolith) n'avaient pas été respectées à la Phase 1.
+- La complexité opérationnelle en Phase 3 a drastiquement augmenté (gestion de multiples conteneurs, configurations réseaux inter-services, API Gateway).

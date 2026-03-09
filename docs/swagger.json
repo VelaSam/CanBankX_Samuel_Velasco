@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "API de la plateforme bancaire CanBankX",
-        "title": "CanBankX API",
+        "title": "CanBankX API (Microservices Edition)",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
@@ -12,7 +12,7 @@
             "name": "Apache 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
-        "version": "1.0"
+        "version": "3.0"
     },
     "basePath": "/",
     "paths": {
@@ -397,7 +397,7 @@
             "properties": {
                 "email": {
                     "type": "string",
-                    "example": "alice@test.com"
+                    "example": "user1@test.com"
                 },
                 "password": {
                     "type": "string",
@@ -413,11 +413,11 @@
             "properties": {
                 "type": {
                     "type": "string",
+                    "example": "SAVINGS",
                     "enum": [
                         "CHECKING",
                         "SAVINGS"
-                    ],
-                    "example": "CHECKING"
+                    ]
                 }
             }
         },
@@ -432,11 +432,11 @@
             "properties": {
                 "amount": {
                     "type": "number",
-                    "example": 50.0
+                    "example": 125.50
                 },
                 "idempotencyKey": {
                     "type": "string",
-                    "example": "tx-req-001"
+                    "example": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
                 },
                 "sourceAccount": {
                     "type": "integer",
@@ -444,7 +444,7 @@
                 },
                 "targetAccount": {
                     "type": "integer",
-                    "example": 2
+                    "example": 3
                 }
             }
         },
@@ -460,24 +460,24 @@
             "properties": {
                 "email": {
                     "type": "string",
-                    "example": "alice@test.com"
+                    "example": "new.user@test.com"
                 },
                 "firstName": {
                     "type": "string",
-                    "example": "Alice"
+                    "example": "Jean"
                 },
                 "lastName": {
                     "type": "string",
-                    "example": "Smith"
+                    "example": "Tremblay"
                 },
                 "password": {
                     "type": "string",
                     "minLength": 8,
-                    "example": "Password123!"
+                    "example": "SecurePassword123!"
                 },
                 "sin": {
                     "type": "string",
-                    "example": "987654321"
+                    "example": "123456789"
                 }
             }
         },
@@ -490,11 +490,11 @@
             "properties": {
                 "code": {
                     "type": "string",
-                    "example": "123456"
+                    "example": "111111"
                 },
                 "mfaToken": {
                     "type": "string",
-                    "example": "{{mfaToken}}"
+                    "example": "xxxx.yyyy.zzzz"
                 }
             }
         }

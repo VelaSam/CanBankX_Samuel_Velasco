@@ -10,8 +10,8 @@ Le projet **CanBankX** vise à concevoir une plateforme bancaire commerciale can
 
 Le projet est divisé en phases évolutives :
 1. Baseline Monolithe Modulaire (Archivé).
-2. Optimisation via Caching (Redis) & Load Balancing **(Version Courante sur main)**.
-3. Architecture Microservices orchestrée via une API Gateway.
+2. Optimisation via Caching (Redis) & Load Balancing (Archivé).
+3. Architecture Microservices orchestrée via une API Gateway KrakenD **(Version Courante sur main)**.
 
 ### 1.2 Quality Goals
 1. **Performance (Latence/Débit):** Latence P95 < 250-500ms ; RPS > 600-1000.
@@ -47,7 +47,7 @@ Le projet est divisé en phases évolutives :
 ---
 
 ## 4. Solution Strategy
-L'approche initiale reposait sur un **Monolithe Modulaire** écrit en Go. Cette décision (ADR-0001) a permis de bâtir une fondation saine. Actuellement, ce monolithe a été optimisé par du Load-Balancing (Nginx) et de la mise en cache rapide avec Redis (Phase 2). Par la suite, ce système sera divisé en micro-services (ADR-0001, phase 3). Les écritures critiques sont assurées par des mécanismes idempotents en base de données relationnelle (ADR-0002).
+L'approche initiale reposait sur un **Monolithe Modulaire** écrit en Go. Cette décision (ADR-0001) a permis de bâtir une fondation saine. Ce monolithe a ensuite été optimisé par du Load-Balancing (Nginx) et de la mise en cache rapide avec Redis (Phase 2). Finalement, le système a été complètement découpé en une **Architecture Microservices** (Phase 3). Les bases de données ont été séparées (Database-per-Microservice) pour assurer une isolation parfaite des données (ADR-0002), et le trafic est désormais orchestré de manière transparente par l'API Gateway KrakenD. Les écritures critiques sont assurées par des mécanismes idempotents et des requêtes HTTP internes synchrones garantissant le respect de l'ACID.
 
 ---
 
@@ -87,8 +87,8 @@ Consolidées dans les ADRs dédiés :
 ---
 
 ## 10. Risques et Dettes Techniques
-- **Technical Debt Intentionnelle (Résilue en Phase 2):** Le manque de haute disponibilité immédiate du Monolithe de base a été corrigé grâce à l'implémentation d'un Load Balancer Nginx et de Redis pour le trafic en lecture.
-- **Risque de Charge Base de données:** Verrouillage transactionnel restrictif lors des phases d'écriture massives. Les tests k6 continueront d'approuver ou d'invalider cette solution.
+- **Technical Debt Intentionnelle (Résolue en Phase 2 et 3):** Les goulots d'étranglement de la base de données monolithique ont été résolus en séparant physiquement la base de données relationnelle en 3 conteneurs distincts (Identity, Accounts, Transactions).
+- **Risque d'Orchestration:** L'état distribué des données oblige des appels HTTP internes synchrones entre les services lors d'un transfert (Ex: Transactions -> Accounts). Une défaillance réseau entre les deux services internes nécessiterait des mécanismes de compensation (Sagas) qui ne sont pas encore implémentés.
 
 ---
 
