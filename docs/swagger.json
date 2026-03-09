@@ -136,8 +136,7 @@
                         "description": "Account ID",
                         "name": "id",
                         "in": "path",
-                        "required": true,
-                        "example": 1
+                        "required": true
                     }
                 ],
                 "responses": {
