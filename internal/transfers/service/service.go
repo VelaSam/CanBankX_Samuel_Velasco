@@ -1,8 +1,12 @@
 package service
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 	"time"
+
+	"canbankx/internal/pkg/cache"
 
 	ledgerDomain "canbankx/internal/ledger/domain"
 	apierrors "canbankx/internal/pkg/errors"
@@ -78,6 +82,13 @@ func (s *transferService) ProcessTransfer(userID uint, req ProcessTransferReques
 			return nil, &apierrors.APIError{ErrorCode: "BAD_REQUEST", Message: err.Error()}
 		}
 		return nil, apierrors.ErrInternalServer
+	}
+
+	ctx := context.Background()
+	sourceCacheKey := fmt.Sprintf("account:%d:history", req.SourceAccount)
+	targetCacheKey := fmt.Sprintf("account:%d:history", req.TargetAccount)
+	if err := cache.Client.Del(ctx, sourceCacheKey, targetCacheKey).Err(); err != nil {
+		slog.Error("Failed to invalidate cache", "error", err)
 	}
 
 	return transfer, nil

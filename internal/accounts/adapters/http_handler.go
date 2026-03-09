@@ -1,12 +1,19 @@
 package adapters
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log/slog"
 	"net/http"
+	"time"
 
 	"canbankx/internal/accounts/service"
+	"canbankx/internal/pkg/cache"
 	apierrors "canbankx/internal/pkg/errors"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
 type AccountHandler struct {
@@ -120,6 +127,22 @@ func (h *AccountHandler) GetAccountHistory(c *gin.Context) {
 		return
 	}
 
+	cacheKey := fmt.Sprintf("account:%d:history", routeParams.ID)
+	ctx := context.Background()
+
+	cachedData, err := cache.Client.Get(ctx, cacheKey).Result()
+	if err == nil {
+		slog.Debug("Cache HIT for account history", "account_id", routeParams.ID)
+		var result map[string]interface{}
+		if err := json.Unmarshal([]byte(cachedData), &result); err == nil {
+			c.JSON(http.StatusOK, result)
+			return
+		}
+	} else if err != redis.Nil {
+		slog.Error("Redis error", "error", err)
+	}
+
+	slog.Debug("Cache MISS for account history", "account_id", routeParams.ID)
 	entries, balance, apiErr := h.svc.GetAccountHistory(userID.(uint), routeParams.ID)
 	if apiErr != nil {
 		status := http.StatusInternalServerError
@@ -130,8 +153,16 @@ func (h *AccountHandler) GetAccountHistory(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	response := gin.H{
 		"balance": balance,
 		"entries": entries,
-	})
+	}
+
+	if responseJSON, err := json.Marshal(response); err == nil {
+		if err := cache.Client.Set(ctx, cacheKey, responseJSON, 5*time.Minute).Err(); err != nil {
+			slog.Error("Failed to cache account history", "error", err)
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }

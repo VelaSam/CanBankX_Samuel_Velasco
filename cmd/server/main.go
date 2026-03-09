@@ -26,6 +26,7 @@ import (
 	ledgerAdapters "canbankx/internal/ledger/adapters"
 	ledger "canbankx/internal/ledger/domain"
 	ledgerService "canbankx/internal/ledger/service"
+	"canbankx/internal/pkg/cache"
 	"canbankx/internal/pkg/middleware"
 	transfersAdapters "canbankx/internal/transfers/adapters"
 	transfers "canbankx/internal/transfers/domain"
@@ -98,6 +99,7 @@ func main() {
 
 	slog.Info("Starting CanBankX Monolith...")
 
+	cache.InitRedis()
 	initDB()
 
 	r := gin.Default()
