@@ -47,15 +47,10 @@ La documentation OpenAPI (Swagger) est publiquement accessible sur : `http://loc
 Afin de pouvoir simuler une utilisation réaliste lors des tests de charge, il faut générer un grand volume d'utilisateurs et de comptes dans la base de données.
 Une fois les conteneurs démarrés, exécutez le script ci-dessous (nécessite Go installé localement) :
 
-**Sur Windows (PowerShell) :**
-```powershell
-$env:DB_USER="canbankx_user"; $env:DB_PASSWORD="SecurePassword123!"; $env:DB_HOST="127.0.0.1"; $env:DB_PORT="3306"; go run cmd/seeder/main.go
-```
-*(Remplacez les identifiants par ceux de votre `.env` s'ils ont été modifiés).*
+Par défaut, le script lit les informations de connexion directement depuis votre fichier `.env`. Si votre `.env` est bien configuré (voir l'étape 2), exécutez simplement :
 
-**Sur Linux / Mac :**
 ```bash
-DB_USER=canbankx_user DB_PASSWORD=SecurePassword123! DB_HOST=127.0.0.1 DB_PORT=3306 go run cmd/seeder/main.go
+go run cmd/seeder/main.go
 ```
 
 Ce script exportera les identifiants de comptes dans le fichier `tests/k6/users.json`, qui sera lu par k6 pour créer des transferts aléatoires.

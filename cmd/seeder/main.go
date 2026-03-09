@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"canbankx/internal/accounts/domain"
 	identityAdmin "canbankx/internal/identity/domain"
 	ledger "canbankx/internal/ledger/domain"
@@ -20,9 +22,18 @@ import (
 var DB *gorm.DB
 
 func initDB() {
-	dsn := os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASSWORD") + "@tcp(" + os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT") + ")/" + os.Getenv("DB_NAME") + "?charset=utf8mb4&parseTime=True&loc=Local"
+	host := os.Getenv("DB_HOST")
+	if host == "db" || host == "" {
+		host = "127.0.0.1"
+	}
+	port := os.Getenv("DB_PORT")
+	if port == "" {
+		port = "3306"
+	}
+
+	dsn := os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASSWORD") + "@tcp(" + host + ":" + port + ")/" + os.Getenv("DB_NAME") + "?charset=utf8mb4&parseTime=True&loc=Local"
 	if os.Getenv("DB_USER") == "" {
-		dsn = "root:rootpassword@tcp(localhost:3306)/canbankx?charset=utf8mb4&parseTime=True&loc=Local"
+		dsn = "canbankx_user:SecurePassword123!@tcp(127.0.0.1:3306)/canbankx?charset=utf8mb4&parseTime=True&loc=Local"
 	}
 
 	for i := 0; i < 15; i++ {
@@ -44,6 +55,12 @@ func main() {
 	slog.SetDefault(logger)
 
 	slog.Info("Starting Data Seeder...")
+
+	// Attempt to load .env file if it exists
+	if err := godotenv.Load(); err != nil {
+		slog.Info("No .env file found or unable to load, relying on system environment variables")
+	}
+
 	initDB()
 
 	//truncate existing data to start fresh pour les load test (pas obligatoire, but good for consistent load tests)
