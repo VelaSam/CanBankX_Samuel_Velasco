@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"os"
@@ -17,9 +18,11 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	"canbankx/internal/kafka"
 	ledgerAdapters "canbankx/internal/ledger/adapters"
 	ledger "canbankx/internal/ledger/domain"
 	ledgerService "canbankx/internal/ledger/service"
+	"canbankx/internal/model"
 	"canbankx/internal/pkg/cache"
 	"canbankx/internal/pkg/middleware"
 	transfersAdapters "canbankx/internal/transfers/adapters"
@@ -71,6 +74,29 @@ func main() {
 
 	cache.InitRedis()
 	initDB()
+
+	go func() {
+		if os.Getenv("KAFKA_HOST") != "" {
+			c, err := kafka.NewConsumer()
+			if err != nil {
+				slog.Error("Failed to initialize Kafka consumer", "error", err)
+				return
+			}
+			defer c.Close()
+
+			err = c.Consume(context.Background(), func(t model.Transaction) error {
+				slog.Info("Received transaction event from CentralBank",
+					"from", t.FromKey, "to", t.ToKey, "amount", t.Amount)
+
+				return nil
+			})
+			if err != nil && err != context.Canceled {
+				slog.Error("Kafka consumer stopped", "error", err)
+			}
+		} else {
+			slog.Info("Kafka consumer disabled (KAFKA_HOST not set)")
+		}
+	}()
 
 	r := gin.Default()
 
