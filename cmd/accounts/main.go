@@ -148,6 +148,39 @@ func setupInternalRoutes(router *gin.Engine) {
 		}
 		c.Status(http.StatusOK)
 	})
+
+	type AdjustReq struct {
+		AccountID uint    `json:"account_id"`
+		Amount    float64 `json:"amount"`
+	}
+
+	internal.POST("/adjust", func(c *gin.Context) {
+		var req AdjustReq
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+			return
+		}
+
+		err := DB.Transaction(func(tx *gorm.DB) error {
+			var acc accounts.Account
+			if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&acc, req.AccountID).Error; err != nil {
+				return fmt.Errorf("account not found")
+			}
+
+			if req.Amount < 0 && acc.Balance < -req.Amount {
+				return fmt.Errorf("insufficient funds")
+			}
+
+			acc.Balance += req.Amount
+			return tx.Save(&acc).Error
+		})
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.Status(http.StatusOK)
+	})
 }
 
 func main() {

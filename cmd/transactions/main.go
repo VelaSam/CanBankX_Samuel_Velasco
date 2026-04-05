@@ -25,6 +25,8 @@ import (
 	transfersAdapters "canbankx/internal/transfers/adapters"
 	transfers "canbankx/internal/transfers/domain"
 	transfersService "canbankx/internal/transfers/service"
+
+	"canbankx/internal/pkg/kafka"
 )
 
 var DB *gorm.DB
@@ -126,6 +128,15 @@ func main() {
 
 	transferRoutes := protected.Group("/transfers")
 	transferHandler.RegisterRoutes(transferRoutes)
+
+	bbcRoutes := protected.Group("/bbc")
+	transfersAdapters.RegisterBBCRoutes(bbcRoutes)
+
+	kafkaHost := os.Getenv("KAFKA_URL")
+	if kafkaHost == "" {
+		kafkaHost = "kafka:9092"
+	}
+	kafka.StartConsumer(DB, kafkaHost, "bbc.events.2", "sam-bank-group")
 
 	port := os.Getenv("PORT")
 	if port == "" {
