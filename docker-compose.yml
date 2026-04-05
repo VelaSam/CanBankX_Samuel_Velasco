@@ -45,8 +45,8 @@ services:
   transactions-api:
     build: .
     command: ["/transactions"]
-    expose:
-      - "8083"
+    ports:
+      - "8083:8083"
     environment:
       - DB_HOST=transactions-db
       - DB_PORT=3306
@@ -128,7 +128,7 @@ services:
   krakend:
     image: devopsfaith/krakend:latest
     ports:
-      - "8080:8080"
+      - "8084:8080"
     volumes:
       - ./krakend/krakend.json:/etc/krakend/krakend.json
     networks:

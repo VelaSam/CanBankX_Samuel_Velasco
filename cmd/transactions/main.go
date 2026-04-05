@@ -129,7 +129,7 @@ func main() {
 	transferRoutes := protected.Group("/transfers")
 	transferHandler.RegisterRoutes(transferRoutes)
 
-	bbcRoutes := protected.Group("/bbc")
+	bbcRoutes := api.Group("/bbc")
 	transfersAdapters.RegisterBBCRoutes(bbcRoutes)
 
 	kafkaHost := os.Getenv("KAFKA_URL")

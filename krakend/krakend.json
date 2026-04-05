@@ -137,6 +137,24 @@
             ]
         },
         {
+            "endpoint": "/api/v1/bbc/transfers",
+            "method": "POST",
+            "output_encoding": "no-op",
+            "input_headers": [
+                "Content-Type"
+            ],
+            "backend": [
+                {
+                    "url_pattern": "/api/v1/bbc/transfers",
+                    "encoding": "no-op",
+                    "method": "POST",
+                    "host": [
+                        "http://transactions-api:8083"
+                    ]
+                }
+            ]
+        },
+        {
             "endpoint": "/health",
             "method": "GET",
             "output_encoding": "no-op",
