@@ -276,7 +276,7 @@
 								"transfers"
 							]
 						},
-						"description": "Envoie une demande de virement vers la BBC sur la VM. Si la BBC est active sur la VM (IP 10.194.32.243), elle traitera l'orchestration."
+						"description": "Envoie une demande de virement vers la BBC sur la VM. Si la BBC est active sur la VM (IP 100.65.158.51), elle traitera l'orchestration."
 					},
 					"response": []
 				}
