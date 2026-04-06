@@ -141,7 +141,8 @@
             "method": "POST",
             "output_encoding": "no-op",
             "input_headers": [
-                "Content-Type"
+                "Content-Type",
+                "Authorization"
             ],
             "backend": [
                 {

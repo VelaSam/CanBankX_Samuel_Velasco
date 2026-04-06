@@ -6,11 +6,20 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 )
 
-var defaultBBCUrl = "http://bbc-service:5005"
+var defaultBBCUrl = getBBCUrl()
 var BankID = 2 // SAM-BANK is 2 based on 01_init_banks.sql
+
+func getBBCUrl() string {
+	url := os.Getenv("BBC_URL")
+	if url == "" {
+		return "http://bbc-service:5005"
+	}
+	return url
+}
 
 type InitiateTxReq struct {
 	FromAccountID uint    `json:"from_account_id"`
