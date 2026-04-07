@@ -37,6 +37,12 @@ type ConfirmTxReq struct {
 	Status        string  `json:"status"` //"CONFIRMED" ou "FAILED"
 }
 
+type CreateKeyReq struct {
+	ClientKey string `json:"client_key"`
+	AccountID int    `json:"account_id"`
+	BankID    int    `json:"bank_id"`
+}
+
 //initiate la transaction outward vers le central bank (bbc)
 func InitiateTransaction(fromAcc int, toKey string, amount float64) error {
 	payload := InitiateTxReq{
@@ -94,6 +100,34 @@ func ConfirmTransaction(fromAcc uint, amount float64, isOrigin bool, transaction
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("BBC confirmation rejected with status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+//envoie une demande pour enregistrer une clef sur la bbc
+func CreateKey(key string, accID int) error {
+	payload := CreateKeyReq{
+		ClientKey: key,
+		AccountID: accID,
+		BankID:    BankID,
+	}
+	body, _ := json.Marshal(payload)
+
+	url := fmt.Sprintf("%s/create-key", defaultBBCUrl)
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		slog.Error("Failed to call BBC /create-key", "error", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("BBC rejected key registration with status %d", resp.StatusCode)
 	}
 
 	return nil

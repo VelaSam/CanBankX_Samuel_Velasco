@@ -270,7 +270,41 @@
 			]
 		},
 		{
-			"name": "3. Transfers",
+			"name": "3. BBC Admin (VM)",
+			"item": [
+				{
+					"name": "BBC Create Key",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"client_key\": \"sam2@example.com\",\n    \"account_id\": 2002,\n    \"bank_id\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://100.65.158.51:8080/create-key",
+							"protocol": "http",
+							"host": [
+								"100.65.158.51"
+							],
+							"port": "8080",
+							"path": [
+								"create-key"
+							]
+						},
+						"description": "Enregistre une nouvelle clé directement dans la BBC sur la VM via la nouvelle route exposée."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Transfers",
 			"item": [
 				{
 					"name": "External BBC Transfer (To VM)",
